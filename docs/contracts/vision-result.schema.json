@@ -1,0 +1,775 @@
+{
+  "$defs": {
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "detector_score": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Detector Score"
+        },
+        "flow_score": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Flow Score"
+        },
+        "seaward_flow_m_per_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seaward Flow M Per S"
+        },
+        "seaward_flow_px_per_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seaward Flow Px Per S"
+        },
+        "timex_score": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Timex Score"
+        }
+      },
+      "required": [
+        "detector_score",
+        "flow_score",
+        "seaward_flow_px_per_s",
+        "seaward_flow_m_per_s",
+        "timex_score"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "InputInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "end_ts": {
+          "format": "date-time",
+          "title": "End Ts",
+          "type": "string"
+        },
+        "fps_processed": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Fps Processed"
+        },
+        "fps_source": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Fps Source"
+        },
+        "frames_processed": {
+          "minimum": 1,
+          "title": "Frames Processed",
+          "type": "integer"
+        },
+        "height": {
+          "minimum": 1,
+          "title": "Height",
+          "type": "integer"
+        },
+        "s3_uri": {
+          "pattern": "^s3://[a-z0-9][a-z0-9.\\-]{1,61}[a-z0-9]/.+$",
+          "title": "S3 Uri",
+          "type": "string"
+        },
+        "start_ts": {
+          "format": "date-time",
+          "title": "Start Ts",
+          "type": "string"
+        },
+        "width": {
+          "minimum": 1,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "s3_uri",
+        "start_ts",
+        "end_ts",
+        "fps_source",
+        "fps_processed",
+        "frames_processed",
+        "width",
+        "height"
+      ],
+      "title": "InputInfo",
+      "type": "object"
+    },
+    "Keyframe": {
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "minimum": 0,
+          "title": "Index",
+          "type": "integer"
+        },
+        "s3_uri": {
+          "pattern": "^s3://[a-z0-9][a-z0-9.\\-]{1,61}[a-z0-9]/.+$",
+          "title": "S3 Uri",
+          "type": "string"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        }
+      },
+      "required": [
+        "index",
+        "ts",
+        "s3_uri"
+      ],
+      "title": "Keyframe",
+      "type": "object"
+    },
+    "Mode": {
+      "enum": [
+        "video",
+        "burst",
+        "image"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "Quality": {
+      "additionalProperties": false,
+      "properties": {
+        "blur": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Blur",
+          "type": "number"
+        },
+        "camera_shake_px": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Camera Shake Px"
+        },
+        "glare": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Glare",
+          "type": "number"
+        },
+        "low_light": {
+          "title": "Low Light",
+          "type": "boolean"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "glare",
+        "blur",
+        "low_light",
+        "camera_shake_px",
+        "notes"
+      ],
+      "title": "Quality",
+      "type": "object"
+    },
+    "Rip": {
+      "additionalProperties": false,
+      "properties": {
+        "area_m2": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Area M2"
+        },
+        "area_px": {
+          "minimum": 0.0,
+          "title": "Area Px",
+          "type": "number"
+        },
+        "bbox_px": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "minimum": 0,
+              "type": "integer"
+            }
+          ],
+          "title": "Bbox Px",
+          "type": "array"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "first_seen_ts": {
+          "format": "date-time",
+          "title": "First Seen Ts",
+          "type": "string"
+        },
+        "label": {
+          "$ref": "#/$defs/RipLabel"
+        },
+        "persist_s": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Persist S"
+        },
+        "polygon_m": {
+          "anyOf": [
+            {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "maxItems": 32,
+              "minItems": 3,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Polygon M"
+        },
+        "polygon_px": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "maxItems": 32,
+          "minItems": 3,
+          "title": "Polygon Px",
+          "type": "array"
+        },
+        "rip_id": {
+          "pattern": "^cam-[0-9]{2,}-rip-[0-9]{4,}$",
+          "title": "Rip Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rip_id",
+        "label",
+        "confidence",
+        "polygon_px",
+        "bbox_px",
+        "polygon_m",
+        "area_px",
+        "area_m2",
+        "evidence",
+        "first_seen_ts",
+        "persist_s"
+      ],
+      "title": "Rip",
+      "type": "object"
+    },
+    "RipLabel": {
+      "enum": [
+        "rip",
+        "uncertain"
+      ],
+      "title": "RipLabel",
+      "type": "string"
+    },
+    "RuntimeInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "cv2_path": {
+          "title": "Cv2 Path",
+          "type": "string"
+        },
+        "instance_type": {
+          "title": "Instance Type",
+          "type": "string"
+        },
+        "opencv_version": {
+          "title": "Opencv Version",
+          "type": "string"
+        },
+        "pipeline": {
+          "title": "Pipeline",
+          "type": "string"
+        },
+        "pipeline_version": {
+          "title": "Pipeline Version",
+          "type": "string"
+        },
+        "variant": {
+          "$ref": "#/$defs/RuntimeVariant"
+        }
+      },
+      "required": [
+        "variant",
+        "opencv_version",
+        "cv2_path",
+        "instance_type",
+        "pipeline",
+        "pipeline_version"
+      ],
+      "title": "RuntimeInfo",
+      "type": "object"
+    },
+    "RuntimeVariant": {
+      "enum": [
+        "cool",
+        "std-arm",
+        "std-x86"
+      ],
+      "title": "RuntimeVariant",
+      "type": "string"
+    },
+    "Status": {
+      "enum": [
+        "rip",
+        "uncertain",
+        "clear"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "Summary": {
+      "additionalProperties": false,
+      "properties": {
+        "max_confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Max Confidence",
+          "type": "number"
+        },
+        "rip_count": {
+          "minimum": 0,
+          "title": "Rip Count",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/Status"
+        },
+        "swimmer_count": {
+          "minimum": 0,
+          "title": "Swimmer Count",
+          "type": "integer"
+        },
+        "swimmers_at_risk": {
+          "minimum": 0,
+          "title": "Swimmers At Risk",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "status",
+        "max_confidence",
+        "rip_count",
+        "swimmer_count",
+        "swimmers_at_risk"
+      ],
+      "title": "Summary",
+      "type": "object"
+    },
+    "Swimmer": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox_px": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "minimum": 0,
+              "type": "integer"
+            }
+          ],
+          "title": "Bbox Px",
+          "type": "array"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "distance_to_rip_m": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Distance To Rip M"
+        },
+        "distance_to_rip_px": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Distance To Rip Px"
+        },
+        "drift_px_per_s": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Drift Px Per S"
+        },
+        "in_rip_id": {
+          "anyOf": [
+            {
+              "pattern": "^cam-[0-9]{2,}-rip-[0-9]{4,}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "In Rip Id"
+        },
+        "position_m": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Position M"
+        },
+        "track_id": {
+          "pattern": "^cam-[0-9]{2,}-sw-[0-9]{4,}$",
+          "title": "Track Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "track_id",
+        "bbox_px",
+        "confidence",
+        "position_m",
+        "in_rip_id",
+        "distance_to_rip_px",
+        "distance_to_rip_m",
+        "drift_px_per_s"
+      ],
+      "title": "Swimmer",
+      "type": "object"
+    },
+    "Timings": {
+      "additionalProperties": false,
+      "properties": {
+        "decode": {
+          "minimum": 0.0,
+          "title": "Decode",
+          "type": "number"
+        },
+        "detect": {
+          "minimum": 0.0,
+          "title": "Detect",
+          "type": "number"
+        },
+        "flow": {
+          "minimum": 0.0,
+          "title": "Flow",
+          "type": "number"
+        },
+        "keyframes": {
+          "minimum": 0.0,
+          "title": "Keyframes",
+          "type": "number"
+        },
+        "preprocess": {
+          "minimum": 0.0,
+          "title": "Preprocess",
+          "type": "number"
+        },
+        "stabilize": {
+          "minimum": 0.0,
+          "title": "Stabilize",
+          "type": "number"
+        },
+        "timex": {
+          "minimum": 0.0,
+          "title": "Timex",
+          "type": "number"
+        },
+        "total": {
+          "minimum": 0.0,
+          "title": "Total",
+          "type": "number"
+        },
+        "track": {
+          "minimum": 0.0,
+          "title": "Track",
+          "type": "number"
+        }
+      },
+      "required": [
+        "decode",
+        "preprocess",
+        "stabilize",
+        "timex",
+        "flow",
+        "detect",
+        "track",
+        "keyframes",
+        "total"
+      ],
+      "title": "Timings",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One processed clip or image, produced by rw-vision.",
+  "properties": {
+    "camera_id": {
+      "pattern": "^cam-[0-9]{2,}$",
+      "title": "Camera Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "input": {
+      "$ref": "#/$defs/InputInfo"
+    },
+    "job_id": {
+      "pattern": "^job_[0-9A-HJKMNP-TV-Z]{26}$",
+      "title": "Job Id",
+      "type": "string"
+    },
+    "keyframes": {
+      "items": {
+        "$ref": "#/$defs/Keyframe"
+      },
+      "maxItems": 10,
+      "title": "Keyframes",
+      "type": "array"
+    },
+    "mode": {
+      "$ref": "#/$defs/Mode"
+    },
+    "out_of_order": {
+      "title": "Out Of Order",
+      "type": "boolean"
+    },
+    "quality": {
+      "$ref": "#/$defs/Quality"
+    },
+    "result_id": {
+      "pattern": "^res_[0-9A-HJKMNP-TV-Z]{26}$",
+      "title": "Result Id",
+      "type": "string"
+    },
+    "rips": {
+      "items": {
+        "$ref": "#/$defs/Rip"
+      },
+      "title": "Rips",
+      "type": "array"
+    },
+    "runtime": {
+      "$ref": "#/$defs/RuntimeInfo"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_id": {
+      "maxLength": 256,
+      "minLength": 1,
+      "title": "Source Id",
+      "type": "string"
+    },
+    "summary": {
+      "$ref": "#/$defs/Summary"
+    },
+    "swimmers": {
+      "items": {
+        "$ref": "#/$defs/Swimmer"
+      },
+      "title": "Swimmers",
+      "type": "array"
+    },
+    "timings_ms": {
+      "$ref": "#/$defs/Timings"
+    },
+    "trace_id": {
+      "pattern": "^tr_[0-9A-HJKMNP-TV-Z]{26}$",
+      "title": "Trace Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "result_id",
+    "trace_id",
+    "camera_id",
+    "source_id",
+    "job_id",
+    "mode",
+    "out_of_order",
+    "input",
+    "runtime",
+    "summary",
+    "rips",
+    "swimmers",
+    "keyframes",
+    "quality",
+    "timings_ms",
+    "created_at"
+  ],
+  "title": "VisionResult",
+  "type": "object"
+}

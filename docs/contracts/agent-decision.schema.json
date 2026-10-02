@@ -1,0 +1,161 @@
+{
+  "$defs": {
+    "Action": {
+      "enum": [
+        "raise_red_flag",
+        "pa_announcement",
+        "dispatch_lifeguard"
+      ],
+      "title": "Action",
+      "type": "string"
+    },
+    "DecisionKind": {
+      "enum": [
+        "ignore",
+        "watch",
+        "alert",
+        "resolve",
+        "close_false_alarm"
+      ],
+      "title": "DecisionKind",
+      "type": "string"
+    },
+    "RiskLevel": {
+      "enum": [
+        "LOW",
+        "ELEVATED",
+        "HIGH",
+        "CRITICAL"
+      ],
+      "title": "RiskLevel",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Written by the agent as the last step of every trace.",
+  "properties": {
+    "camera_id": {
+      "pattern": "^cam-[0-9]{2,}$",
+      "title": "Camera Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "decision": {
+      "$ref": "#/$defs/DecisionKind"
+    },
+    "decision_id": {
+      "pattern": "^dec_[0-9A-HJKMNP-TV-Z]{26}$",
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "incident_id": {
+      "anyOf": [
+        {
+          "pattern": "^inc_[0-9A-HJKMNP-TV-Z]{26}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Incident Id"
+    },
+    "input_tokens": {
+      "minimum": 0,
+      "title": "Input Tokens",
+      "type": "integer"
+    },
+    "latency_ms": {
+      "minimum": 0,
+      "title": "Latency Ms",
+      "type": "integer"
+    },
+    "model_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Model Id"
+    },
+    "output_tokens": {
+      "minimum": 0,
+      "title": "Output Tokens",
+      "type": "integer"
+    },
+    "reasons": {
+      "items": {
+        "maxLength": 500,
+        "type": "string"
+      },
+      "maxItems": 10,
+      "title": "Reasons",
+      "type": "array"
+    },
+    "requested_action": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Action"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "result_id": {
+      "pattern": "^res_[0-9A-HJKMNP-TV-Z]{26}$",
+      "title": "Result Id",
+      "type": "string"
+    },
+    "risk_level": {
+      "$ref": "#/$defs/RiskLevel"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tool_calls": {
+      "minimum": 0,
+      "title": "Tool Calls",
+      "type": "integer"
+    },
+    "trace_id": {
+      "pattern": "^tr_[0-9A-HJKMNP-TV-Z]{26}$",
+      "title": "Trace Id",
+      "type": "string"
+    },
+    "used_fallback": {
+      "title": "Used Fallback",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "decision_id",
+    "trace_id",
+    "result_id",
+    "camera_id",
+    "incident_id",
+    "decision",
+    "risk_level",
+    "reasons",
+    "requested_action",
+    "tool_calls",
+    "used_fallback",
+    "model_id",
+    "input_tokens",
+    "output_tokens",
+    "latency_ms",
+    "created_at"
+  ],
+  "title": "AgentDecision",
+  "type": "object"
+}
