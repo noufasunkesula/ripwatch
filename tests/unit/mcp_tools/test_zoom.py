@@ -139,6 +139,18 @@ def test_no_keyframes_returns_original(s3, vision_result, keyframes):
     assert rechecker.crops == []
 
 
+def test_missing_bucket_counts_as_no_keyframes(s3, vision_result):
+    vision_result["keyframes"] = [
+        {"index": 0, "ts": "2026-10-05T10:15:00Z", "s3_uri": "s3://rw-missing-bucket/k/000.jpg"}
+    ]
+    result = VisionResult.model_validate(vision_result)
+    store = InMemoryDetectionStore([result])
+
+    out = zoom_and_recheck(store, s3, FakeRechecker(0.1), _args(result))
+
+    assert out.note == NO_KEYFRAMES
+
+
 def test_unknown_rip_raises(s3, vision_result):
     store, result = _setup(vision_result, [])
 

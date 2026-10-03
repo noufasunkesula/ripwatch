@@ -946,8 +946,8 @@ Permissions: `contents: read` by default, `id-token: write` only on jobs that lo
 - [x] Output summaries are truncated: max 2 KB per field, lists capped at 10 items. Full tool outputs are never stored in DynamoDB.
 
 ### D-03 MCP server and data tools (`rw/mcp_tools/`)
-- [ ] FastMCP server, streamable HTTP on `127.0.0.1:8765`, no auth (loopback only; document why). Heartbeat. Structured logging with `trace_id` passed as a tool argument on every tool.
-- [ ] Every tool has typed inputs and outputs (Pydantic), a docstring written for the model (what it does, when to use it, what it returns), and returns compact JSON.
+- [x] FastMCP server, streamable HTTP on `127.0.0.1:8765`, no auth (loopback only; document why). Heartbeat. Structured logging with `trace_id` passed as a tool argument on every tool.
+- [x] Every tool has typed inputs and outputs (Pydantic), a docstring written for the model (what it does, when to use it, what it returns), and returns compact JSON.
 
 | Tool | Inputs | Output | Behavior |
 |---|---|---|---|
@@ -1107,6 +1107,7 @@ Upgrade to Paid plan, apply bootstrap (if not done in Sprint 1), migrate bootstr
 | 2026-10-03 | `predict_spread` uses `seaward_stretch_v1` instead of `linear_advection_v1`: shore end fixed, seaward end extends by flow speed x time (capped at 50% of rip length by 300 s), widens 10%/min, scaled by ocean factor | Translating the whole polygon at water speed pushed the example rip (6.4 px/s, 640x360) out of frame within 1 minute; water flows through a rip, the rip itself mostly stays | Daksh |
 | 2026-10-03 | `rw-detections` item = `camera_id`, `ts_result` (`<start_ts %Y-%m-%dT%H:%M:%S.%fZ>#<result_id>`), `result_id`, `expires_at`, `result` (VisionResult JSON string); written only through `rw.mcp_tools.store.to_item` | One shared format for ingest and tools; fixed-width timestamp keeps string order = time order; no float/Decimal conversion of nested fields | Daksh (Request to Noufa) |
 | 2026-10-03 | `get_flow_stats` trend adds `unknown` (fewer than 2 flow readings) to `rising`/`steady`/`falling` | A trend from one reading would be invented | Daksh |
+| 2026-10-03 | MCP server uses `mcp` 2.x `MCPServer` (FastMCP was renamed in mcp 2.0); pin `mcp>=2.3,<3` | Importing FastMCP fails on mcp 2.x; same server and transport | Daksh (Request to Noufa) |
 | | | | |
 
 ---

@@ -13,6 +13,7 @@ from typing import Annotated, Any, Protocol
 
 import cv2
 import numpy as np
+from botocore.exceptions import ClientError
 from pydantic import BaseModel, Field, model_validator
 
 from rw.contracts import Status, VisionResult, classify
@@ -30,6 +31,7 @@ from rw.mcp_tools.store import DetectionStore
 
 EXPAND = 0.25
 NO_KEYFRAMES = "no_keyframes"
+_MISSING = {"NoSuchKey", "NoSuchBucket", "404"}
 
 
 class Rechecker(Protocol):
@@ -74,8 +76,10 @@ def _load(s3: Any, uri: str) -> np.ndarray | None:
     bucket, key = _split_s3_uri(uri)
     try:
         body = s3.get_object(Bucket=bucket, Key=key)["Body"].read()
-    except s3.exceptions.NoSuchKey:
-        return None
+    except ClientError as exc:
+        if exc.response.get("Error", {}).get("Code") in _MISSING:
+            return None
+        raise
     image = cv2.imdecode(np.frombuffer(body, dtype=np.uint8), cv2.IMREAD_COLOR)
     return image
 
