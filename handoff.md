@@ -108,3 +108,22 @@ Statuses: `todo`, `in-progress`, `in-review`, `done`, `cut`.
   - git checkout daksh/D-01-contracts
   - ~/.venvs/ripwatch-dev/bin/python -m pytest tests/unit -q
   - open rw/contracts/vision.py and Saif's contracts folder side by side
+
+### Session 3: daksh
+- Start: Saturday 03 October 2026, 15:27 IST (scripts/now.py missing, time from system clock)
+- End: Saturday 03 October 2026, 15:27 IST (under 5 min)
+- Branch: daksh/D-02-trace
+- Tasks: none changed (D-01 in-progress, D-02 in-progress)
+- Done:
+  - Session start routine only; checks still green (71 tests, ruff, schema check)
+  - Found CRLF-only changes in CLAUDE.md, cloud-claude.md, 02-ripwatch-infra-north-star-v1.md (no content change); left uncommitted
+- Next step: decide on the CRLF changes (discard recommended), then contract sync with Saif (need his contracts folder), then D-03 MCP server + data tools
+- Blockers: no pyproject.toml / rw.common on origin (N-01, N-02, N-04); Saif sign-off pending; D-03 inputs missing: demo beach (proposed Panama City Beach FL, NOAA 8729108, unverified), NWS zone, RW_NWS_USER_AGENT email; `mcp` and `boto3`/`moto` not installed in dev venv
+- Decisions: none
+- Requests created: none
+- Commits: docs(handoff): session 3 end for daksh
+- Pushed: no
+- Resume with:
+  - git checkout daksh/D-02-trace
+  - git diff --ignore-cr-at-eol --stat (confirm CRLF-only, then decide)
+  - ~/.venvs/ripwatch-dev/bin/python -m pytest tests/unit -q
