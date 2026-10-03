@@ -28,9 +28,9 @@ Shared session log for Sprint 1. Rules in `cloud-claude.md` sections 6 to 8. App
 
 | Task | Title | Status | Branch | PR |
 |---|---|---|---|---|
-| D-01 | Contracts | in-progress | daksh/D-01-contracts | |
-| D-02 | Trace and decision helpers | in-progress | daksh/D-02-trace | |
-| D-03 | MCP server and data tools | in-progress | daksh/D-03-mcp-tools | |
+| D-01 | Contracts | in-review | daksh/D-01-contracts | #1 |
+| D-02 | Trace and decision helpers | in-review | daksh/D-02-trace | #2 |
+| D-03 | MCP server and data tools | in-review | daksh/D-03-mcp-tools | #3 |
 | D-04 | MCP action tools | todo | | |
 | D-05 | Agent loop | todo | | |
 | D-06 | Incident lifecycle and watching | todo | | |
@@ -144,4 +144,5 @@ Statuses: `todo`, `in-progress`, `in-review`, `done`, `cut`.
   - Noted: sprint-1.md references sections 9.5 (risk rules, needed by D-05) and 9.6 (SSM params) that do not exist
   - Slip: one smoke-test tool call reached real AWS DynamoDB with dummy credentials (rejected, read-only, nothing changed); future smoke tests use moto
   - Commits: d89b5cb, 3c2f87f, 319544c, 82decc2, c8c15df, b5743fd, 34883bd (all D-03)
-  - Next: open PRs for D-01, D-02, D-03 (stacked), then D-04 action tools
+  - PRs opened (reviewer noufa): #1 D-01 -> main, #2 D-02 -> D-01, #3 D-03 -> D-02 (stacked; retarget each after the one below merges). D-01, D-02, D-03 now in-review
+  - Next: D-04 action tools (branch from daksh/D-03-mcp-tools); contract sync with Saif as a follow-up to #1
