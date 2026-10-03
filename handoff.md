@@ -132,6 +132,22 @@ Statuses: `todo`, `in-progress`, `in-review`, `done`, `cut`.
 
 ### Session 4: daksh
 - Start: Saturday 03 October 2026, 15:29 IST (scripts/now.py missing, time from system clock)
+- End: Saturday 03 October 2026, 18:05 IST (2 h 36 min)
+- Branch: daksh/D-03-mcp-tools
+- Tasks: D-01 (in-progress -> in-review, #1), D-02 (in-progress -> in-review, #2), D-03 (todo -> in-review, #3)
+- Done: see Progress below (D-03 complete, PRs #1 to #3 opened)
+- Next step: D-04 action tools on a new branch daksh/D-04-action-tools from daksh/D-03-mcp-tools, starting with create_incident (needs rw-incidents table shape from sprint-1.md section 7 and the moto DynamoDB pattern in tests/unit/mcp_tools/test_store.py)
+- Blockers: no pyproject.toml / rw.common on origin (N-01, N-02, N-04); Saif contract sync pending (need his contracts folder); sprint-1.md sections 9.5 (risk rules) and 9.6 (SSM params) missing; D-08 inputs still open (demo beach, NWS zone, NWS User-Agent email)
+- Decisions: 4 rows in sprint-1.md Decision Log on 2026-10-03 (seaward_stretch_v1, rw-detections item format, flow trend unknown, MCPServer)
+- Requests created: for noufa, rw-detections via to_item() (N-11); pyproject deps and ruff line length (N-02)
+- Commits: d89b5cb, 3c2f87f, 319544c, 82decc2, c8c15df, b5743fd, 34883bd (D-03); 1c8c840, 6bd6b8a, plus this end entry (handoff)
+- Pushed: yes (origin/daksh/D-03-mcp-tools up to 6bd6b8a); end entry push pending
+- Checks at end: 151 unit tests passed, ruff check and format clean (line length 100), schema check clean
+- Uncommitted: CRLF-only changes in CLAUDE.md, cloud-claude.md, 02-ripwatch-infra-north-star-v1.md (still undecided)
+- Resume with:
+  - git checkout daksh/D-03-mcp-tools && git pull
+  - git checkout -b daksh/D-04-action-tools
+  - ~/.venvs/ripwatch-dev/bin/python -m pytest tests/unit -q
 - Progress (as of Saturday 03 October 2026, 17:19 IST, session still open):
   - Branch: daksh/D-03-mcp-tools (from daksh/D-02-trace), pushed to origin
   - D-03 code complete: MCP server `rw/mcp_tools/` (MCPServer, 127.0.0.1:8765, streamable HTTP, /health, heartbeat file, per-call logging with trace_id) and 5 data tools: track_swimmers, predict_spread, get_ocean_conditions, get_flow_stats, zoom_and_recheck
