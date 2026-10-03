@@ -946,15 +946,15 @@ Permissions: `contents: read` by default, `id-token: write` only on jobs that lo
 - [x] Output summaries are truncated: max 2 KB per field, lists capped at 10 items. Full tool outputs are never stored in DynamoDB.
 
 ### D-03 MCP server and data tools (`rw/mcp_tools/`)
-- [ ] FastMCP server, streamable HTTP on `127.0.0.1:8765`, no auth (loopback only; document why). Heartbeat. Structured logging with `trace_id` passed as a tool argument on every tool.
-- [ ] Every tool has typed inputs and outputs (Pydantic), a docstring written for the model (what it does, when to use it, what it returns), and returns compact JSON.
+- [x] FastMCP server, streamable HTTP on `127.0.0.1:8765`, no auth (loopback only; document why). Heartbeat. Structured logging with `trace_id` passed as a tool argument on every tool.
+- [x] Every tool has typed inputs and outputs (Pydantic), a docstring written for the model (what it does, when to use it, what it returns), and returns compact JSON.
 
 | Tool | Inputs | Output | Behavior |
 |---|---|---|---|
 | `zoom_and_recheck` | `trace_id`, `result_id`, `camera_id`, `rip_id` or `bbox_px`, `zoom` (1.5 to 4.0, default 2.0) | `label`, `confidence`, `before_confidence`, `keyframes_used`, `note` | Loads up to 10 keyframes for the result from S3, crops the bbox expanded by 25%, upsamples by `zoom` with `INTER_CUBIC`, calls `VisionPipeline.recheck`. Fails gracefully with `note="no_keyframes"` |
 | `get_flow_stats` | `trace_id`, `camera_id`, `window_s` (30 to 300) | per-rip mean and max seaward flow, persistence in seconds, trend (`rising`, `steady`, `falling`), number of clips seen | Queries `rw-detections` for the camera over the window |
 | `track_swimmers` | `trace_id`, `result_id`, `camera_id` | swimmers with `track_id`, `in_rip_id`, distance, drift, count at risk | Reads the result |
-| `predict_spread` | `trace_id`, `result_id`, `camera_id`, `rip_id`, `horizons_s` (default `[60, 180, 300]`) | predicted polygons per horizon, swimmers predicted inside the rip per horizon, `method` | Baseline: translate and dilate the rip polygon along the mean seaward flow vector for each horizon, scaled by the ocean factor below; advect swimmer positions with their drift. Method string `"linear_advection_v1"`. Saif can replace later |
+| `predict_spread` | `trace_id`, `result_id`, `camera_id`, `rip_id`, `horizons_s` (default `[60, 180, 300]`) | predicted polygons per horizon, swimmers predicted inside the rip per horizon, `method` | Baseline: keep the rip anchored at its shore end, extend its seaward end by seaward flow speed x time (capped at 50% of the rip length by 300 s) and widen it 10% per minute, both scaled by the ocean factor below; advect swimmer positions with their drift. Method string `"seaward_stretch_v1"` (`"no_motion"` in image mode). Saif can replace later |
 | `get_ocean_conditions` | `trace_id` | next high/low tide times and heights, tide trend, active NWS alerts (event + headline), `ocean_factor` (1.0 normal, 1.2 within 2 h of low tide, +0.3 if a Rip Current Statement or Beach Hazards Statement is active), `age_minutes` | Reads SSM `/rw/ocean/latest`. If older than 120 min, returns the data with `stale=true` |
 
 ### D-04 MCP action tools
@@ -1104,6 +1104,10 @@ Upgrade to Paid plan, apply bootstrap (if not done in Sprint 1), migrate bootstr
 | 2026-10-02 | Thresholds 0.70 / 0.40 are defaults only; live SSM values passed as validation context | Saif's model needs tuned thresholds | Daksh |
 | 2026-10-02 | Saif reviewed the VisionResult draft: requested changes (box format pick one, original-image pixel coords + image size, temporal evidence N of M frames, `zoom_and_recheck` before/after status). Two drafts exist (his and Daksh's); merge at the sync, sign-off after | Recorded per D-01 | Saif, Daksh |
 | 2026-10-02 | `TraceWriter` writes through a `TraceSink` interface; in-memory sink now, DynamoDB sink after N-04 | Not blocked on `rw.common.aws` | Daksh |
+| 2026-10-03 | `predict_spread` uses `seaward_stretch_v1` instead of `linear_advection_v1`: shore end fixed, seaward end extends by flow speed x time (capped at 50% of rip length by 300 s), widens 10%/min, scaled by ocean factor | Translating the whole polygon at water speed pushed the example rip (6.4 px/s, 640x360) out of frame within 1 minute; water flows through a rip, the rip itself mostly stays | Daksh |
+| 2026-10-03 | `rw-detections` item = `camera_id`, `ts_result` (`<start_ts %Y-%m-%dT%H:%M:%S.%fZ>#<result_id>`), `result_id`, `expires_at`, `result` (VisionResult JSON string); written only through `rw.mcp_tools.store.to_item` | One shared format for ingest and tools; fixed-width timestamp keeps string order = time order; no float/Decimal conversion of nested fields | Daksh (Request to Noufa) |
+| 2026-10-03 | `get_flow_stats` trend adds `unknown` (fewer than 2 flow readings) to `rising`/`steady`/`falling` | A trend from one reading would be invented | Daksh |
+| 2026-10-03 | MCP server uses `mcp` 2.x `MCPServer` (FastMCP was renamed in mcp 2.0); pin `mcp>=2.3,<3` | Importing FastMCP fails on mcp 2.x; same server and transport | Daksh (Request to Noufa) |
 | | | | |
 
 ---

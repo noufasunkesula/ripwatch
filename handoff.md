@@ -28,9 +28,9 @@ Shared session log for Sprint 1. Rules in `cloud-claude.md` sections 6 to 8. App
 
 | Task | Title | Status | Branch | PR |
 |---|---|---|---|---|
-| D-01 | Contracts | in-progress | daksh/D-01-contracts | |
-| D-02 | Trace and decision helpers | in-progress | daksh/D-02-trace | |
-| D-03 | MCP server and data tools | todo | | |
+| D-01 | Contracts | in-review | daksh/D-01-contracts | #1 |
+| D-02 | Trace and decision helpers | in-review | daksh/D-02-trace | #2 |
+| D-03 | MCP server and data tools | in-review | daksh/D-03-mcp-tools | #3 |
 | D-04 | MCP action tools | todo | | |
 | D-05 | Agent loop | todo | | |
 | D-06 | Incident lifecycle and watching | todo | | |
@@ -55,6 +55,8 @@ Statuses: `todo`, `in-progress`, `in-review`, `done`, `cut`.
 - (from daksh, 2026-10-02) Add a CI step `python -m rw.contracts.export_schemas --check` (N-15). Fails when committed schemas in `docs/contracts/` differ from the models.
 - (from daksh, 2026-10-02) Heads up: `rw/__init__.py` already exists on `daksh/D-01-contracts` (one docstring line). Keep either version when N-01 merges.
 - (from daksh, 2026-10-02) Join the contract sync with Saif: his request to use original-image pixel coordinates (plus image size) changes what baseline vision emits in N-11.
+- (from daksh, 2026-10-03) rw-detections item format for ingest (N-11): write items with `rw.mcp_tools.store.to_item(result)` (or `DynamoDetectionStore.put`). Fields: `camera_id`, `ts_result` = `<start_ts as %Y-%m-%dT%H:%M:%S.%fZ>#<result_id>` (fixed width so string order is time order), `result_id` (needed because a Query cannot filter on key attributes), `expires_at` = created_at + 24 h, `result` = VisionResult JSON string. The table in N-08 needs nothing extra (no GSI).
+- (from daksh, 2026-10-03) Dependencies for D-03 in `pyproject.toml` (N-02): `mcp>=2.3,<3` (2.x renamed FastMCP to MCPServer), `boto3`, `moto[server]` (dev), `opencv-python-headless==5.0.0.93` (cv-std). Also ruff `line-length = 100` (existing code uses it).
 
 ### For Daksh
 - (none)
@@ -121,9 +123,26 @@ Statuses: `todo`, `in-progress`, `in-review`, `done`, `cut`.
 - Blockers: no pyproject.toml / rw.common on origin (N-01, N-02, N-04); Saif sign-off pending; D-03 inputs missing: demo beach (proposed Panama City Beach FL, NOAA 8729108, unverified), NWS zone, RW_NWS_USER_AGENT email; `mcp` and `boto3`/`moto` not installed in dev venv
 - Decisions: none
 - Requests created: none
-- Commits: docs(handoff): session 3 end for daksh
-- Pushed: no
+- Commits: 57b6990 docs(handoff): session 3 end for daksh
+- Pushed: yes, after the end entry (origin/daksh/D-01-contracts, origin/daksh/D-02-trace); CRLF question left unanswered, changes left uncommitted
 - Resume with:
   - git checkout daksh/D-02-trace
   - git diff --ignore-cr-at-eol --stat (confirm CRLF-only, then decide)
   - ~/.venvs/ripwatch-dev/bin/python -m pytest tests/unit -q
+
+### Session 4: daksh
+- Start: Saturday 03 October 2026, 15:29 IST (scripts/now.py missing, time from system clock)
+- Progress (as of Saturday 03 October 2026, 17:19 IST, session still open):
+  - Branch: daksh/D-03-mcp-tools (from daksh/D-02-trace), pushed to origin
+  - D-03 code complete: MCP server `rw/mcp_tools/` (MCPServer, 127.0.0.1:8765, streamable HTTP, /health, heartbeat file, per-call logging with trace_id) and 5 data tools: track_swimmers, predict_spread, get_ocean_conditions, get_flow_stats, zoom_and_recheck
+  - DetectionStore (in-memory + DynamoDB) with `to_item()` defining the rw-detections item; OceanSnapshot defines the JSON rw-ocean-poller (D-08) writes to /rw/ocean/latest
+  - zoom_and_recheck calls a `Rechecker` interface; VisionPipeline.recheck (N-11) plugs in later, until then the server returns a clear "not available" tool error
+  - 151 unit tests passing, ruff clean (line length 100); server smoke-tested over HTTP on 8765
+  - Installed into ~/.venvs/ripwatch-dev: mcp 2.3.0, boto3, moto 5.2.3, opencv-python-headless 5.0.0.93
+  - Decisions (sprint-1.md Decision Log, 2026-10-03): predict_spread uses seaward_stretch_v1; rw-detections item format; flow trend `unknown`; MCPServer instead of FastMCP (mcp 2.x)
+  - Requests created: for noufa, rw-detections item format via `to_item()` (N-11); pyproject deps mcp>=2.3,<3, boto3, moto[server], opencv-python-headless==5.0.0.93, ruff line-length 100 (N-02)
+  - Noted: sprint-1.md references sections 9.5 (risk rules, needed by D-05) and 9.6 (SSM params) that do not exist
+  - Slip: one smoke-test tool call reached real AWS DynamoDB with dummy credentials (rejected, read-only, nothing changed); future smoke tests use moto
+  - Commits: d89b5cb, 3c2f87f, 319544c, 82decc2, c8c15df, b5743fd, 34883bd (all D-03)
+  - PRs opened (reviewer noufa): #1 D-01 -> main, #2 D-02 -> D-01, #3 D-03 -> D-02 (stacked; retarget each after the one below merges). D-01, D-02, D-03 now in-review
+  - Next: D-04 action tools (branch from daksh/D-03-mcp-tools); contract sync with Saif as a follow-up to #1
