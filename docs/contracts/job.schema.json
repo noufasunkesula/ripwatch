@@ -1,0 +1,127 @@
+{
+  "$defs": {
+    "JobSource": {
+      "enum": [
+        "camera_sim",
+        "upload"
+      ],
+      "title": "JobSource",
+      "type": "string"
+    },
+    "JobStatus": {
+      "enum": [
+        "awaiting_upload",
+        "queued",
+        "processing",
+        "done",
+        "failed"
+      ],
+      "title": "JobStatus",
+      "type": "string"
+    },
+    "Mode": {
+      "enum": [
+        "video",
+        "burst",
+        "image"
+      ],
+      "title": "Mode",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Ingest job row in rw-jobs.",
+  "properties": {
+    "camera_id": {
+      "pattern": "^cam-[0-9]{2,}$",
+      "title": "Camera Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Error"
+    },
+    "followup_request": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Followup Request"
+    },
+    "job_id": {
+      "pattern": "^job_[0-9A-HJKMNP-TV-Z]{26}$",
+      "title": "Job Id",
+      "type": "string"
+    },
+    "mode": {
+      "$ref": "#/$defs/Mode"
+    },
+    "result_id": {
+      "anyOf": [
+        {
+          "pattern": "^res_[0-9A-HJKMNP-TV-Z]{26}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Result Id"
+    },
+    "s3_key": {
+      "maxLength": 1024,
+      "minLength": 1,
+      "title": "S3 Key",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/JobSource"
+    },
+    "status": {
+      "$ref": "#/$defs/JobStatus"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "job_id",
+    "camera_id",
+    "source",
+    "s3_key",
+    "mode",
+    "status",
+    "result_id",
+    "error",
+    "followup_request",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "Job",
+  "type": "object"
+}

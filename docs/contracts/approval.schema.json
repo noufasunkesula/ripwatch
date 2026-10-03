@@ -1,0 +1,88 @@
+{
+  "$defs": {
+    "Action": {
+      "enum": [
+        "raise_red_flag",
+        "pa_announcement",
+        "dispatch_lifeguard"
+      ],
+      "title": "Action",
+      "type": "string"
+    },
+    "ApprovalDecision": {
+      "enum": [
+        "approve",
+        "reject"
+      ],
+      "title": "ApprovalDecision",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Row in rw-approvals, written by rw-api when a lifeguard approves or rejects.",
+  "properties": {
+    "action": {
+      "$ref": "#/$defs/Action"
+    },
+    "decision": {
+      "$ref": "#/$defs/ApprovalDecision"
+    },
+    "incident_id": {
+      "pattern": "^inc_[0-9A-HJKMNP-TV-Z]{26}$",
+      "title": "Incident Id",
+      "type": "string"
+    },
+    "latency_s": {
+      "minimum": 0.0,
+      "title": "Latency S",
+      "type": "number"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "maxLength": 1000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reason"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "ts": {
+      "format": "date-time",
+      "title": "Ts",
+      "type": "string"
+    },
+    "user_email": {
+      "maxLength": 254,
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "title": "User Email",
+      "type": "string"
+    },
+    "user_sub": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "User Sub",
+      "type": "string"
+    }
+  },
+  "required": [
+    "incident_id",
+    "ts",
+    "action",
+    "decision",
+    "user_sub",
+    "user_email",
+    "reason",
+    "latency_s"
+  ],
+  "title": "Approval",
+  "type": "object"
+}

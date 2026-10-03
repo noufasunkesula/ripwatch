@@ -1,0 +1,117 @@
+{
+  "$defs": {
+    "StepType": {
+      "enum": [
+        "candidate_received",
+        "llm_call",
+        "tool_call",
+        "decision",
+        "status_change",
+        "fallback",
+        "suppressed_duplicate",
+        "human_approval"
+      ],
+      "title": "StepType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "maxLength": 2048,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Error"
+    },
+    "input": {
+      "additionalProperties": true,
+      "title": "Input",
+      "type": "object"
+    },
+    "latency_ms": {
+      "minimum": 0,
+      "title": "Latency Ms",
+      "type": "integer"
+    },
+    "name": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "output_summary": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Output Summary"
+    },
+    "reasoning_summary": {
+      "anyOf": [
+        {
+          "maxLength": 2048,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reasoning Summary"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "step": {
+      "minimum": 1,
+      "title": "Step",
+      "type": "integer"
+    },
+    "trace_id": {
+      "pattern": "^tr_[0-9A-HJKMNP-TV-Z]{26}$",
+      "title": "Trace Id",
+      "type": "string"
+    },
+    "trace_key": {
+      "pattern": "^(?:inc_[0-9A-HJKMNP-TV-Z]{26}|cand_res_[0-9A-HJKMNP-TV-Z]{26})$",
+      "title": "Trace Key",
+      "type": "string"
+    },
+    "type": {
+      "$ref": "#/$defs/StepType"
+    }
+  },
+  "required": [
+    "trace_key",
+    "step",
+    "trace_id",
+    "type",
+    "name",
+    "input",
+    "output_summary",
+    "reasoning_summary",
+    "latency_ms",
+    "error",
+    "created_at"
+  ],
+  "title": "TraceStep",
+  "type": "object"
+}
