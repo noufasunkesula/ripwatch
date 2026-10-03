@@ -1,8 +1,13 @@
 """predict_spread: where a rip and nearby swimmers will be at a few future horizons.
 
-Baseline method `linear_advection_v1` (sprint-1.md D-03), Saif can replace it:
-  - the rip polygon moves seaward by its measured seaward flow speed and grows
-    around its centroid by GROWTH_PER_MIN, both scaled by the ocean factor;
+Baseline method `seaward_stretch_v1` (replaces `linear_advection_v1` from
+sprint-1.md D-03, see Decision Log 2026-10-03), Saif can replace it:
+  - the rip stays anchored at its shore end; its seaward end extends by the
+    measured seaward flow speed x time, capped at MAX_STRETCH of the rip's
+    length by CAP_HORIZON_S (water flows through a rip, the rip itself does
+    not travel at water speed);
+  - the rip widens across the flow by WIDEN_PER_MIN;
+  - both are scaled by the ocean factor;
   - each swimmer's box centre moves with its drift;
   - a swimmer is predicted inside if its moved centre falls in the moved polygon.
 
@@ -22,9 +27,11 @@ from rw.contracts import VisionResult
 from rw.contracts.base import CameraId, ResultId, RipId, TraceId, TrackId
 from rw.mcp_tools.store import DetectionStore
 
-METHOD = "linear_advection_v1"
+METHOD = "seaward_stretch_v1"
 NO_MOTION = "no_motion"
-GROWTH_PER_MIN = 0.10
+WIDEN_PER_MIN = 0.10
+MAX_STRETCH = 0.5
+CAP_HORIZON_S = 300
 SEAWARD = (0.0, -1.0)
 MAX_SWIMMERS = 10
 
@@ -82,6 +89,29 @@ def _clamp(polygon: list[tuple[float, float]], width: int, height: int):
     return clamped, leaves
 
 
+def _stretch(
+    polygon: list[tuple[float, float]], speed: float, t: int, ocean_factor: float
+) -> list[tuple[float, float]]:
+    """Extend the seaward end and widen across the flow; the shore end stays put."""
+    cx, cy = _centroid(polygon)
+    sx, sy = SEAWARD
+    nx, ny = -sy, sx  # across the flow
+    along = [(x - cx) * sx + (y - cy) * sy for x, y in polygon]
+    across = [(x - cx) * nx + (y - cy) * ny for x, y in polygon]
+    shore, length = min(along), max(along) - min(along)
+
+    cap = MAX_STRETCH * length * min(t, CAP_HORIZON_S) / CAP_HORIZON_S
+    extension = min(speed * t, cap) * ocean_factor
+    widen = 1.0 + WIDEN_PER_MIN * (t / 60.0) * ocean_factor
+
+    moved = []
+    for a, b in zip(along, across, strict=True):
+        a += extension * ((a - shore) / length if length else 0.0)
+        b *= widen
+        moved.append((cx + a * sx + b * nx, cy + a * sy + b * ny))
+    return moved
+
+
 def predict_spread(
     store: DetectionStore, args: PredictSpreadInput, ocean_factor: float = 1.0
 ) -> PredictSpreadOutput:
@@ -102,18 +132,11 @@ def predict_spread(
     speed = rip.evidence.seaward_flow_px_per_s
     method = METHOD if speed is not None else NO_MOTION
     polygon = [(float(x), float(y)) for x, y in rip.polygon_px]
-    cx, cy = _centroid(polygon)
     width, height = result.input.width, result.input.height
 
     horizons = []
     for t in args.horizons_s:
-        if speed is None:
-            moved = polygon
-        else:
-            shift = speed * t * ocean_factor
-            dx, dy = SEAWARD[0] * shift, SEAWARD[1] * shift
-            scale = 1.0 + GROWTH_PER_MIN * (t / 60.0) * ocean_factor
-            moved = [(cx + (x - cx) * scale + dx, cy + (y - cy) * scale + dy) for x, y in polygon]
+        moved = polygon if speed is None else _stretch(polygon, speed, t, ocean_factor)
         clamped, leaves = _clamp(moved, width, height)
 
         inside = []

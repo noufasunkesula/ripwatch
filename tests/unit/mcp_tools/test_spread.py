@@ -41,21 +41,39 @@ def _area(polygon) -> float:
     )
 
 
-def test_default_horizons_move_rip_seaward(vision_result):
+def _min_y(polygon) -> int:
+    return min(y for _, y in polygon)
+
+
+def _max_y(polygon) -> int:
+    return max(y for _, y in polygon)
+
+
+def test_seaward_end_extends_shore_end_stays(vision_result):
+    # Rip spans y 138 (seaward end) to 262 (shore end), length 124 px.
     store, args = _setup(vision_result, speed=0.1)
-    start = _mean_y(vision_result["rips"][0]["polygon_px"])
 
     out = predict_spread(store, args)
 
     assert out.method == METHOD
     assert [h.horizon_s for h in out.horizons] == [60, 180, 300]
-    ys = [_mean_y(h.polygon_px) for h in out.horizons]
-    assert ys[0] == pytest.approx(start - 6, abs=1)
-    assert ys[0] > ys[1] > ys[2]
+    # 0.1 px/s x 60, 180, 300 s = 6, 18, 30 px, all under the cap
+    assert [_min_y(h.polygon_px) for h in out.horizons] == [132, 120, 108]
+    assert all(_max_y(h.polygon_px) == 262 for h in out.horizons)
     assert not any(h.leaves_frame for h in out.horizons)
 
 
-def test_rip_grows_over_time(vision_result):
+def test_extension_capped_at_half_length_by_cap_horizon(vision_result):
+    store, args = _setup(vision_result, speed=6.4)
+
+    out = predict_spread(store, args)
+
+    # cap = 50% of 124 px, reached at 300 s: 12.4, 37.2, 62 px
+    assert [_min_y(h.polygon_px) for h in out.horizons] == [126, 101, 76]
+    assert not any(h.leaves_frame for h in out.horizons)
+
+
+def test_rip_widens_across_flow(vision_result):
     store, args = _setup(vision_result, speed=0.0)
     start = _area(vision_result["rips"][0]["polygon_px"])
 
@@ -63,8 +81,8 @@ def test_rip_grows_over_time(vision_result):
 
     areas = [_area(h.polygon_px) for h in out.horizons]
     assert start < areas[0] < areas[1] < areas[2]
-    # 300 s at 10%/min: scale 1.5, area x2.25
-    assert areas[2] == pytest.approx(start * 2.25, rel=0.05)
+    # 300 s at 10%/min: 1.5x wider, same length
+    assert areas[2] == pytest.approx(start * 1.5, rel=0.05)
 
 
 def test_ocean_factor_pushes_further(vision_result):
@@ -74,7 +92,7 @@ def test_ocean_factor_pushes_further(vision_result):
     rough = predict_spread(store, args, ocean_factor=1.5)
 
     assert rough.ocean_factor == 1.5
-    assert _mean_y(rough.horizons[0].polygon_px) < _mean_y(calm.horizons[0].polygon_px)
+    assert _min_y(rough.horizons[0].polygon_px) < _min_y(calm.horizons[0].polygon_px)
 
 
 def test_swimmer_drifting_into_rip_is_predicted_inside(vision_result):
@@ -94,7 +112,8 @@ def test_swimmer_drifting_into_rip_is_predicted_inside(vision_result):
     assert out.horizons[1].swimmers_inside == ["cam-01-sw-0012"]
 
 
-def test_fast_flow_clamps_to_frame(vision_result):
+def test_rip_near_horizon_leaves_frame_and_is_clamped(vision_result):
+    vision_result["rips"][0]["polygon_px"] = [[312, 10], [340, 8], [355, 130], [300, 132]]
     store, args = _setup(vision_result, speed=6.4)
 
     out = predict_spread(store, args)
