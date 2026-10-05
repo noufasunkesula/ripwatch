@@ -640,10 +640,10 @@ These are the agreements between vision, agent, API and dashboard. They are Pyda
 - [x] `.checkov.yaml`: framework terraform, `soft-fail: false`. Every skip must be an inline `#checkov:skip=<ID>:<reason>` on the resource, never a global skip.
 
 ### N-03 Config and environment
-- [ ] `.env.example` with every variable from section 2.2 and section 5, each with a comment saying what it is and where to get it.
-- [ ] `rw/common/config.py`: a frozen Pydantic `Settings` (or dataclass) loading from environment with the defaults from section 5. One function `get_settings()` cached with `functools.lru_cache`. Raises a clear error naming the missing variable when a required value is absent.
-- [ ] `infra/backend.hcl.example` and `make backend-config` that renders `infra/backend.hcl` from `.env` (`bucket = "rw-tfstate-${AWS_ACCOUNT_ID}"`, `region`, `encrypt = true`, `use_lockfile = true`). Each stack's `backend.tf` has only `terraform { backend "s3" { key = "<stack>/terraform.tfstate" } }` and gets the rest via `-backend-config=../../backend.hcl`.
-- [ ] `docs/sprint-2-inputs.md`: table of every value still needed for Sprint 2, who provides it, and the exact command or console page to get it.
+- [x] `.env.example` with every variable from section 2.2 and section 5, each with a comment saying what it is and where to get it.
+- [x] `rw/common/config.py`: a frozen Pydantic `Settings` (or dataclass) loading from environment with the defaults from section 5. One function `get_settings()` cached with `functools.lru_cache`. Raises a clear error naming the missing variable when a required value is absent.
+- [x] `infra/backend.hcl.example` and `make backend-config` that renders `infra/backend.hcl` from `.env` (`bucket = "rw-tfstate-${AWS_ACCOUNT_ID}"`, `region`, `encrypt = true`, `use_lockfile = true`). Each stack's `backend.tf` has only `terraform { backend "s3" { key = "<stack>/terraform.tfstate" } }` and gets the rest via `-backend-config=../../backend.hcl`.
+- [x] `docs/sprint-2-inputs.md`: table of every value still needed for Sprint 2, who provides it, and the exact command or console page to get it.
 
 ### N-04 `rw.common`
 | File | Must provide |
@@ -1102,6 +1102,7 @@ Upgrade to Paid plan, apply bootstrap (if not done in Sprint 1), migrate bootstr
 | 2026-10-05 | Noufa is unavailable; Daksh runs Noufa's tasks (N-01 onward) in sessions logged as `noufa`, committing with his own git identity | Keep the N and D task streams separate in `handoff.md` while one person works both | Daksh |
 | 2026-10-05 | `sprint-1.md` and the north star moved into `docs/` (`docs/sprints/sprint-1.md`, `docs/02-infra-north-star.md`) as N-01 and `cloud-claude.md` expect; `docs/01-project-description.md` is not in the repo yet, added when available | Paths in `cloud-claude.md` and section 4 already point there | Daksh (for Noufa) |
 | 2026-10-05 | Dev extra also has `pre-commit` (needed by `make setup`) and `tzdata` (zoneinfo on Windows for `scripts/now.py`); ruff skips `*.md` so formatting never rewrites code snippets in docs | Tools the existing tasks already require | Daksh (for Noufa) |
+| 2026-10-05 | `Settings` keeps values with no safe default (queue URLs, topic ARN, account ID, buckets) optional at load; `settings.require(field)` raises naming the env var. Buckets derive `rw-<kind>-<account_id>` from `AWS_ACCOUNT_ID`. `RW_LLM` defaults to `fake` | Local and test runs need no AWS values; nothing calls Bedrock unless asked | Daksh (for Noufa) |
 | | | | |
 
 ---

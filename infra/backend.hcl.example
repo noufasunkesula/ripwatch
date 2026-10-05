@@ -1,0 +1,6 @@
+# Rendered to infra/backend.hcl (gitignored) by `make backend-config` from AWS_ACCOUNT_ID in .env.
+# Each stack's backend.tf sets only its key and runs `terraform init -backend-config=../../backend.hcl`.
+bucket       = "rw-tfstate-<account_id>"
+region       = "us-east-1"
+encrypt      = true
+use_lockfile = true
