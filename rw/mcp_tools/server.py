@@ -22,7 +22,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
@@ -30,9 +30,11 @@ from pydantic import Field, ValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from rw.contracts.base import CameraId, NonNegInt, ResultId, RipId, TraceId
+from rw.contracts.base import CameraId, IncidentId, JobId, NonNegInt, ResultId, RipId, TraceId
+from rw.contracts.decision import Action, RiskLevel
 from rw.mcp_tools.store import DetectionStore
-from rw.mcp_tools.tools import flow, ocean, spread, swimmers
+from rw.mcp_tools.tools import flow, followup, ocean, spread, swimmers
+from rw.mcp_tools.tools import incidents as incident_tools
 from rw.mcp_tools.tools import zoom as zoom_tool
 
 HOST = "127.0.0.1"
@@ -42,8 +44,9 @@ SERVER_NAME = "rw-mcp-tools"
 log = logging.getLogger("rw.mcp_tools")
 
 INSTRUCTIONS = (
-    "Tools for checking a possible rip current on a beach camera. Data tools only "
-    "read; none of them alerts anyone. Pass the trace_id you were given to every call."
+    "Tools for checking a possible rip current on a beach camera. Data tools only read. "
+    "Action tools open, watch, alert and close incidents and ask for approval; none of them "
+    "takes a public action. Pass the trace_id you were given to every call."
 )
 
 
@@ -62,6 +65,20 @@ class ToolDeps:
     rechecker: zoom_tool.Rechecker = field(default_factory=UnavailableRechecker)
     ssm_prefix: str = "/rw"
     now: Callable[[], datetime] = lambda: datetime.now(UTC)
+    # Action tools (D-04). Unset in data-only setups; those tools then report what is missing.
+    incidents: Any = None  # rw-incidents Table
+    jobs: Any = None  # rw-jobs Table
+    sns: Any = None
+    lifeguard_topic_arn: str | None = None
+    artifacts_bucket: str | None = None
+    dashboard_url: str = "https://dashboard.invalid"
+    renderer: incident_tools.Renderer = incident_tools.default_renderer
+
+
+def _need(value: Any, what: str) -> Any:
+    if value is None:
+        raise ToolError(f"{what} is not configured on this server")
+    return value
 
 
 def _doc(fn: Callable[..., Any]) -> str:
@@ -164,6 +181,109 @@ def build_server(deps: ToolDeps) -> MCPServer:
         with _call("get_ocean_conditions", trace_id):
             args = ocean.OceanConditionsInput(trace_id=trace_id)
             return ocean.get_ocean_conditions(deps.ssm, args, deps.ssm_prefix, deps.now)
+
+    # ------------------------------------------------------------ action tools (D-04)
+
+    @server.tool(description=_doc(incident_tools.create_incident))
+    def create_incident(
+        trace_id: TraceId,
+        camera_id: CameraId,
+        result_id: ResultId,
+        risk_level: RiskLevel,
+        summary: Annotated[str, Field(min_length=1, max_length=500)],
+    ) -> incident_tools.CreateIncidentOutput:
+        with _call("create_incident", trace_id):
+            args = incident_tools.CreateIncidentInput(
+                trace_id=trace_id,
+                camera_id=camera_id,
+                result_id=result_id,
+                risk_level=risk_level,
+                summary=summary,
+            )
+            return incident_tools.create_incident(
+                deps.store,
+                deps.s3,
+                _need(deps.incidents, "rw-incidents"),
+                _need(deps.artifacts_bucket, "the artifacts bucket"),
+                args,
+                deps.now(),
+                deps.renderer,
+            )
+
+    @server.tool(description=_doc(incident_tools.set_watch))
+    def set_watch(
+        trace_id: TraceId,
+        incident_id: IncidentId,
+        clips: Annotated[int, Field(ge=1, le=6)],
+        reason: Annotated[str, Field(min_length=1, max_length=300)],
+    ) -> incident_tools.SetWatchOutput:
+        with _call("set_watch", trace_id):
+            args = incident_tools.SetWatchInput(
+                trace_id=trace_id, incident_id=incident_id, clips=clips, reason=reason
+            )
+            return incident_tools.set_watch(_need(deps.incidents, "rw-incidents"), args, deps.now())
+
+    @server.tool(description=_doc(incident_tools.alert_lifeguard))
+    def alert_lifeguard(
+        trace_id: TraceId,
+        incident_id: IncidentId,
+        message: Annotated[str, Field(min_length=1, max_length=300)],
+    ) -> incident_tools.AlertOutput:
+        with _call("alert_lifeguard", trace_id):
+            args = incident_tools.AlertInput(
+                trace_id=trace_id, incident_id=incident_id, message=message
+            )
+            return incident_tools.alert_lifeguard(
+                _need(deps.incidents, "rw-incidents"),
+                _need(deps.sns, "SNS"),
+                _need(deps.lifeguard_topic_arn, "rw-lifeguard-alerts"),
+                deps.dashboard_url,
+                args,
+                deps.now(),
+            )
+
+    @server.tool(description=_doc(incident_tools.request_approval))
+    def request_approval(
+        trace_id: TraceId,
+        incident_id: IncidentId,
+        action: Action,
+        message: Annotated[str, Field(min_length=1, max_length=300)],
+    ) -> incident_tools.ApprovalRequestOutput:
+        with _call("request_approval", trace_id):
+            args = incident_tools.ApprovalRequestInput(
+                trace_id=trace_id, incident_id=incident_id, action=action, message=message
+            )
+            return incident_tools.request_approval(
+                _need(deps.incidents, "rw-incidents"), args, deps.now()
+            )
+
+    @server.tool(description=_doc(followup.request_followup_capture))
+    def request_followup_capture(
+        trace_id: TraceId,
+        camera_id: CameraId,
+        job_id: JobId,
+        message: Annotated[str, Field(min_length=1, max_length=300)],
+    ) -> followup.FollowupOutput:
+        with _call("request_followup_capture", trace_id):
+            args = followup.FollowupInput(
+                trace_id=trace_id, camera_id=camera_id, job_id=job_id, message=message
+            )
+            return followup.request_followup_capture(_need(deps.jobs, "rw-jobs"), args, deps.now())
+
+    @server.tool(description=_doc(incident_tools.close_incident))
+    def close_incident(
+        trace_id: TraceId,
+        incident_id: IncidentId,
+        outcome: Literal["false_alarm", "resolved", "confirmed"],
+        reason: Annotated[str, Field(min_length=1, max_length=300)],
+    ) -> incident_tools.CloseOutput:
+        with _call("close_incident", trace_id):
+            args = incident_tools.CloseInput(
+                trace_id=trace_id, incident_id=incident_id, outcome=outcome, reason=reason
+            )
+            return incident_tools.close_incident(
+                _need(deps.incidents, "rw-incidents"), args, deps.now()
+            )
 
     @server.custom_route("/health", methods=["GET"])
     async def health(request: Request) -> JSONResponse:

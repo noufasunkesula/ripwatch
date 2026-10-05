@@ -17,13 +17,22 @@ from tests.unit.mcp_tools.helpers import T0
 
 pytestmark = pytest.mark.anyio
 
-TOOLS = {
+DATA_TOOLS = {
     "zoom_and_recheck",
     "get_flow_stats",
     "track_swimmers",
     "predict_spread",
     "get_ocean_conditions",
 }
+ACTION_TOOLS = {
+    "create_incident",
+    "set_watch",
+    "alert_lifeguard",
+    "request_approval",
+    "request_followup_capture",
+    "close_incident",
+}
+TOOLS = DATA_TOOLS | ACTION_TOOLS
 TRACE = "tr_01J9ZC4M6Y2N8Q4T7V1B3K5D9F"
 
 
@@ -53,7 +62,7 @@ def _ids(result: VisionResult) -> dict:
     return {"trace_id": TRACE, "result_id": result.result_id, "camera_id": result.camera_id}
 
 
-async def test_lists_the_five_data_tools(deps):
+async def test_lists_the_eleven_tools(deps):
     async with Client(build_server(deps)) as client:
         tools = (await client.list_tools()).tools
 
@@ -78,6 +87,20 @@ async def test_unknown_result_is_a_readable_tool_error(deps, result):
 
     assert out.is_error is True
     assert "not found" in out.content[0].text
+
+
+async def test_action_tool_without_its_table_says_what_is_missing(deps):
+    args = {
+        "trace_id": TRACE,
+        "incident_id": "inc_01J9ZC4M6Y2N8Q4T7V1B3K5D9F",
+        "clips": 2,
+        "reason": "glare",
+    }
+    async with Client(build_server(deps)) as client:
+        out = await client.call_tool("set_watch", args)
+
+    assert out.is_error is True
+    assert "rw-incidents is not configured" in out.content[0].text
 
 
 async def test_bad_trace_id_rejected(deps, result):
@@ -157,4 +180,4 @@ def test_health_route(deps):
     response = TestClient(app).get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {"ok": True, "service": "rw-mcp-tools", "tools": 5}
+    assert response.json() == {"ok": True, "service": "rw-mcp-tools", "tools": len(TOOLS)}

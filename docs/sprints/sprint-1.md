@@ -968,7 +968,7 @@ Permissions: `contents: read` by default, `id-token: write` only on jobs that lo
 | `request_followup_capture` | `trace_id`, `camera_id`, `job_id`, `message` | `requested: true` | Writes `followup_request` on the job (shown in the dashboard). Only allowed for `mode=image` or `burst` |
 | `close_incident` | `trace_id`, `incident_id`, `outcome` (`false_alarm`, `resolved`, `confirmed`), `reason` | final status | Sets `resolved`/`confirmed`/`closed`. `false_alarm` emits `FalseAlarmsRejected` |
 
-- [ ] Unit tests for every tool with moto (S3, DynamoDB, SNS, SSM) and fixture keyframes.
+- [x] Unit tests for every tool with moto (S3, DynamoDB, SNS, SSM) and fixture keyframes.
 
 ### D-05 Agent loop (`rw/agent/`)
 
@@ -1115,6 +1115,7 @@ Upgrade to Paid plan, apply bootstrap (if not done in Sprint 1), migrate bootstr
 | 2026-10-05 | `rw.common.metrics` sink is picked per process: Lambda (`AWS_LAMBDA_FUNCTION_NAME`) prints EMF, worker (`RW_RUNTIME` set) uses the aws-embedded-metrics agent sink with log group `/rw/worker/<service>`, otherwise in-memory. Unknown names raise only in memory mode; elsewhere they are dropped with a warning. `timed()` emits `FrameLatencyMs` with `stage` and `runtime` (`local` when unset). `.gitattributes` forces LF | Metrics must never crash the pipeline in AWS but must fail loudly in tests; CRLF breaks make and bash in WSL and on the worker | Daksh (for Noufa) |
 | 2026-10-05 | Makefile: Terraform logic lives in `scripts/tf.sh`; `RW_CONFIRM_APPLY` only counts from the command line or shell, never from `.env`; `plan-local` uses its own data dir and writes `tfplan-<stack>-local`, which `apply` never accepts; `down` skips `data` as well as `bootstrap` (tables would go too); shellcheck and checkov run through uv (`shellcheck-py`, `uv tool run checkov`), only tflint needs a system install | Guard against accidental applies; fewer tools to install | Daksh (for Noufa) |
 | 2026-10-05 | Terraform: Cognito hosted UI domain is `rw-<first 8 hex of sha1(account_id-name)>` instead of a random suffix (no `random` provider, stable across applies); `rw-agent-fallback-high` = `AgentFallbackUsed / RipCandidates` over 15 min; `s3-bucket` creates the versioning resource only when `versioning = true`; ASG collects `GroupInServiceInstances` for the 14 h alarm; `make tf-validate` and `lint` also cover `infra/modules/*` | Section 3 allows only the aws and archive providers; the north star alarms need a defined denominator and a metric source | Daksh (for Noufa) |
+| 2026-10-05 | D-04: incident status changes go through `rw/agent/lifecycle_rules.py` (stdlib-only status and transition tables from the D-06 diagram, packaged by rw-api later); `alert` from `alerted` is allowed so `alert_lifeguard` and `request_approval` can both run. `create_incident` is idempotent per `result_id` by scanning `rw-incidents` (no result_id index; fine at demo scale). The snapshot renderer is injected (`ToolDeps.renderer`, default `rw.vision.draw.draw_overlay` once N-11 is on main, plain polygons until then) plus a RipWatch caption bar. Action-tool dependencies are optional in `ToolDeps`; a tool without its table answers with a readable error | D-04 needs the D-06 rules before D-06; avoids a stacked dependency on N-11 | Daksh |
 | | | | |
 
 ---

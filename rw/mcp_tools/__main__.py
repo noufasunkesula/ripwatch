@@ -32,11 +32,18 @@ def _heartbeat(stop: threading.Event) -> None:
 
 def build_deps() -> ToolDeps:
     settings = get_settings()
+    dynamodb = resource("dynamodb")
     return ToolDeps(
-        store=DynamoDetectionStore(resource("dynamodb").Table(settings.table_detections)),
+        store=DynamoDetectionStore(dynamodb.Table(settings.table_detections)),
         s3=client("s3"),
         ssm=client("ssm"),
         ssm_prefix=settings.ssm_prefix,
+        incidents=dynamodb.Table(settings.table_incidents),
+        jobs=dynamodb.Table(settings.table_jobs),
+        sns=client("sns"),
+        lifeguard_topic_arn=settings.topic_lifeguard_arn,
+        artifacts_bucket=settings.artifacts_bucket,
+        dashboard_url=settings.allowed_origin or "https://dashboard.invalid",
     )
 
 
