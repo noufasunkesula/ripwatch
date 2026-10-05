@@ -26,6 +26,8 @@ dev = [
     "pip-audit>=2.7",
     "huggingface_hub>=0.25",
     "pre-commit>=4",
+    # YAML configs for scripts (replay_cameras.yaml) and the fake LLM scripts (D-05).
+    "pyyaml>=6",
     # zoneinfo data for scripts/now.py on Windows.
     "tzdata>=2024.1",
 ]
