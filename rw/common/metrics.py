@@ -146,15 +146,20 @@ def _agent_sink():  # noqa: ANN202
 
 
 @contextmanager
-def timed(stage: str, metric: str = "FrameLatencyMs") -> Iterator[None]:
+def timed(
+    stage: str, metric: str = "FrameLatencyMs", record: dict[str, float] | None = None
+) -> Iterator[None]:
     """Time a block (or decorated function) and emit milliseconds with `stage` and `runtime`.
 
-    Usable as `with timed("flow"):` or `@timed("flow")`.
+    Usable as `with timed("flow"):` or `@timed("flow")`. With `record`, the elapsed milliseconds
+    are also added to `record[stage]` (VisionResult.timings_ms).
     """
     start = time.perf_counter()
     try:
         yield
     finally:
         elapsed_ms = (time.perf_counter() - start) * 1000
+        if record is not None:
+            record[stage] = record.get(stage, 0.0) + elapsed_ms
         runtime = get_settings().runtime or "local"
         emit(metric, elapsed_ms, "Milliseconds", {"stage": stage, "runtime": runtime})
