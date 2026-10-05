@@ -31,6 +31,7 @@ resource "aws_internet_gateway" "this" {
   tags = { Name = "rw-igw" }
 }
 
+# nosemgrep: aws-subnet-has-public-ip-address -- public IPs replace a NAT gateway (north star 6); rw-worker-sg has no ingress
 resource "aws_subnet" "public" {
   #checkov:skip=CKV_AWS_130:Public IPs replace a NAT gateway (north star 6); rw-worker-sg allows no inbound traffic
   for_each                = local.subnets
