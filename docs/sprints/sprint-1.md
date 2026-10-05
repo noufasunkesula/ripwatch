@@ -900,7 +900,7 @@ class VisionPipeline:
 ### N-12 Lambdas: scheduler and kill switch
 - `rw-scheduler` handler accepts `{"action": "wake" | "sleep" | "export" | "status"}`. `wake` sets desired 1, `sleep` sets desired 0, `status` returns ASG instances and lifecycle states, `export` scans `rw-incidents`, `rw-agent-trace`, `rw-approvals` and writes JSON Lines to `rw-artifacts/traces/<YYYY-MM-DD>/<table>.jsonl`. Emits a log line per action.
 - `rw-kill-switch` handler: on any SNS message, sets desired 0, publishes to `rw-ops-alerts` "Kill switch fired: worker scaled to 0. Budget message: <first 500 chars>". Idempotent.
-- [ ] Unit tests with moto for both, including export with sample rows.
+- [x] Unit tests with moto for both, including export with sample rows.
 
 ### N-13 Data scripts
 | Script | Does | Notes |
