@@ -1,4 +1,4 @@
-"""Valid example payloads for every contract, based on sprint-1.md section 7."""
+"""Valid example payloads for every contract (sprint-1.md section 7), shared by all unit tests."""
 
 from __future__ import annotations
 
