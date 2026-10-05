@@ -1,0 +1,28 @@
+# Secrets and local config (never commit)
+.env
+**/terraform.tfvars
+infra/backend.hcl
+
+# Terraform (keep .terraform.lock.hcl committed)
+**/backend_override.tf
+**/tfplan-*
+**/.terraform/
+*.tfstate*
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+
+# Data and media
+data/
+work/
+*.mp4
+*.zip
+
+# Node
+node_modules/

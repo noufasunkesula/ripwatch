@@ -622,22 +622,22 @@ These are the agreements between vision, agent, API and dashboard. They are Pyda
 
 ### N-01 Repo scaffold
 - [ ] Use the existing repo `https://github.com/noufasunkesula/ripwatch.git`. Make sure it is private, add Saif and Daksh as collaborators, protect `main`: PR required, 1 approval, CI must pass, no force pushes. (Settings changes on GitHub are done by Noufa in the browser.)
-- [ ] Workflow files from `cloud-claude.md` section 9 exist: `CLAUDE.md`, `cloud-claude.md`, `handoff.md`, `scripts/now.py`, `scripts/progress.py`.
-- [ ] Create the layout from section 4 with empty `__init__.py` files.
+- [x] Workflow files from `cloud-claude.md` section 9 exist: `CLAUDE.md`, `cloud-claude.md`, `handoff.md`, `scripts/now.py`, `scripts/progress.py`.
+- [x] Create the layout from section 4 with empty `__init__.py` files.
 - [ ] Copy `01-project-description.md`, `02-infra-north-star.md`, `sprint-1.md` into `docs/`.
-- [ ] `.gitignore` must include: `.env`, `**/terraform.tfvars`, `infra/backend.hcl`, `**/backend_override.tf`, `**/tfplan-*`, `**/.terraform/`, `*.tfstate*`, `.venv/`, `data/`, `work/`, `*.mp4`, `*.zip`, `__pycache__/`, `.pytest_cache/`, `dist/`, `node_modules/`. Must **not** ignore `.terraform.lock.hcl`.
+- [x] `.gitignore` must include: `.env`, `**/terraform.tfvars`, `infra/backend.hcl`, `**/backend_override.tf`, `**/tfplan-*`, `**/.terraform/`, `*.tfstate*`, `.venv/`, `data/`, `work/`, `*.mp4`, `*.zip`, `__pycache__/`, `.pytest_cache/`, `dist/`, `node_modules/`. Must **not** ignore `.terraform.lock.hcl`.
 
 ### N-02 Tooling
-- [ ] `pyproject.toml` with project `rw`, version `0.1.0`, Python `>=3.12,<3.13`, and dependency groups:
+- [x] `pyproject.toml` with project `rw`, version `0.1.0`, Python `>=3.12,<3.13`, and dependency groups:
   - base: `boto3`, `pydantic>=2`, `numpy` (version range must be compatible with whatever COOL ships; constrained at install time on the worker), `aws-embedded-metrics`, `mcp`, `python-ulid`
   - optional `cv-std`: `opencv-python-headless==5.0.0.93`
   - optional `dev`: `pytest`, `pytest-cov`, `moto[server]`, `ruff`, `pip-audit`, `huggingface_hub`
   - **No** OpenCV in base or `worker`.
-- [ ] `uv lock`, commit `uv.lock`.
-- [ ] `ruff` config: line length 100, target `py312`, rules `E,F,I,B,UP,S` (S for security), allow `assert` in tests.
-- [ ] `.pre-commit-config.yaml`: ruff, ruff-format, terraform_fmt, gitleaks, shellcheck, end-of-file-fixer.
-- [ ] `.tflint.hcl` with the AWS ruleset plugin enabled.
-- [ ] `.checkov.yaml`: framework terraform, `soft-fail: false`. Every skip must be an inline `#checkov:skip=<ID>:<reason>` on the resource, never a global skip.
+- [x] `uv lock`, commit `uv.lock`.
+- [x] `ruff` config: line length 100, target `py312`, rules `E,F,I,B,UP,S` (S for security), allow `assert` in tests.
+- [x] `.pre-commit-config.yaml`: ruff, ruff-format, terraform_fmt, gitleaks, shellcheck, end-of-file-fixer.
+- [x] `.tflint.hcl` with the AWS ruleset plugin enabled.
+- [x] `.checkov.yaml`: framework terraform, `soft-fail: false`. Every skip must be an inline `#checkov:skip=<ID>:<reason>` on the resource, never a global skip.
 
 ### N-03 Config and environment
 - [ ] `.env.example` with every variable from section 2.2 and section 5, each with a comment saying what it is and where to get it.
@@ -1099,6 +1099,9 @@ Upgrade to Paid plan, apply bootstrap (if not done in Sprint 1), migrate bootstr
 | 2026-10-01 | Local AWS access via `aws configure --profile ripwatch` with per-person IAM users and access keys, instead of IAM Identity Center | Simpler for a 3-person, 4-week project; no Organization needed. Keys stay in `~/.aws/credentials`, Gitleaks guards the repo, MFA required for console | Noufa |
 | 2026-10-01 | `terraform plan` against real AWS is allowed anytime; apply and destroy only after a human says "apply" and confirms the plan | Catch real errors early without risking cost or changes | Noufa, Daksh |
 | 2026-10-01 | Lighter path (section 0.4) defined, decision point Sun Oct 4 | A known fallback if scope is too big | Noufa |
+| 2026-10-05 | Noufa is unavailable; Daksh runs Noufa's tasks (N-01 onward) in sessions logged as `noufa`, committing with his own git identity | Keep the N and D task streams separate in `handoff.md` while one person works both | Daksh |
+| 2026-10-05 | `sprint-1.md` and the north star moved into `docs/` (`docs/sprints/sprint-1.md`, `docs/02-infra-north-star.md`) as N-01 and `cloud-claude.md` expect; `docs/01-project-description.md` is not in the repo yet, added when available | Paths in `cloud-claude.md` and section 4 already point there | Daksh (for Noufa) |
+| 2026-10-05 | Dev extra also has `pre-commit` (needed by `make setup`) and `tzdata` (zoneinfo on Windows for `scripts/now.py`); ruff skips `*.md` so formatting never rewrites code snippets in docs | Tools the existing tasks already require | Daksh (for Noufa) |
 | | | | |
 
 ---
