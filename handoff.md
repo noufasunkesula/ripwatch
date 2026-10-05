@@ -8,8 +8,8 @@ Shared session log for Sprint 1. Rules in `cloud-claude.md` sections 6 to 8. App
 
 | Task | Title | Status | Branch | PR |
 |---|---|---|---|---|
-| N-01 | Repo scaffold | todo | | |
-| N-02 | Tooling | todo | | |
+| N-01 | Repo scaffold | in-progress | noufa/N-01-repo-scaffold | |
+| N-02 | Tooling | in-progress | noufa/N-01-repo-scaffold | |
 | N-03 | Config and environment | todo | | |
 | N-04 | `rw.common` | todo | | |
 | N-05 | Makefile | todo | | |
@@ -65,7 +65,9 @@ Statuses: `todo`, `in-progress`, `in-review`, `done`, `cut`.
 
 ## Session log: Noufa
 
-(no sessions yet)
+### Session 1: noufa
+- Start: Monday 05 October 2026, 14:28 IST (scripts/now.py missing, time from system clock)
+- Branch: noufa/N-01-repo-scaffold (from origin/main 874073a)
 
 ---
 
