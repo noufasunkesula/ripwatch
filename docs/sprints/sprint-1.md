@@ -656,7 +656,7 @@ These are the agreements between vision, agent, API and dashboard. They are Pyda
 | `ids.py` | `new_id(prefix)` returning prefixed ULIDs (`res_`, `tr_`, `job_`, `inc_`, `dec_`) |
 | `heartbeat.py` | `beat(service)` writes the current epoch to `/var/run/rw/<service>.heartbeat` (path from config so tests use a tmp dir) |
 
-- [ ] Unit tests for every function above. `runtime.py` tested by monkeypatching `cv2.__file__` and installed distributions.
+- [x] Unit tests for every function above. `runtime.py` tested by monkeypatching `cv2.__file__` and installed distributions.
 
 ### N-05 Makefile
 Every target prints what it does and uses `AWS_PROFILE` from `.env`. Targets marked **READ** only read from AWS (plans, describes, logs) and are always allowed. Targets marked **CHANGE** modify AWS and require `RW_CONFIRM_APPLY=<stack or action name>` to match what is being changed; without it they print the rule from section 0 and exit 1. Claude Code only runs **CHANGE** targets after a human says "apply" (section 0.2).
@@ -1103,6 +1103,7 @@ Upgrade to Paid plan, apply bootstrap (if not done in Sprint 1), migrate bootstr
 | 2026-10-05 | `sprint-1.md` and the north star moved into `docs/` (`docs/sprints/sprint-1.md`, `docs/02-infra-north-star.md`) as N-01 and `cloud-claude.md` expect; `docs/01-project-description.md` is not in the repo yet, added when available | Paths in `cloud-claude.md` and section 4 already point there | Daksh (for Noufa) |
 | 2026-10-05 | Dev extra also has `pre-commit` (needed by `make setup`) and `tzdata` (zoneinfo on Windows for `scripts/now.py`); ruff skips `*.md` so formatting never rewrites code snippets in docs | Tools the existing tasks already require | Daksh (for Noufa) |
 | 2026-10-05 | `Settings` keeps values with no safe default (queue URLs, topic ARN, account ID, buckets) optional at load; `settings.require(field)` raises naming the env var. Buckets derive `rw-<kind>-<account_id>` from `AWS_ACCOUNT_ID`. `RW_LLM` defaults to `fake` | Local and test runs need no AWS values; nothing calls Bedrock unless asked | Daksh (for Noufa) |
+| 2026-10-05 | `rw.common.metrics` sink is picked per process: Lambda (`AWS_LAMBDA_FUNCTION_NAME`) prints EMF, worker (`RW_RUNTIME` set) uses the aws-embedded-metrics agent sink with log group `/rw/worker/<service>`, otherwise in-memory. Unknown names raise only in memory mode; elsewhere they are dropped with a warning. `timed()` emits `FrameLatencyMs` with `stage` and `runtime` (`local` when unset). `.gitattributes` forces LF | Metrics must never crash the pipeline in AWS but must fail loudly in tests; CRLF breaks make and bash in WSL and on the worker | Daksh (for Noufa) |
 | | | | |
 
 ---

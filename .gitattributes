@@ -1,0 +1,6 @@
+# LF everywhere: make, bash and systemd in WSL and on the worker break on CRLF.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.mp4 binary
+*.zip binary
