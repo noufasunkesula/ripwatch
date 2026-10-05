@@ -97,6 +97,13 @@ validate() {
     TF_DATA_DIR="${dir}/.terraform-validate" tf "${dir}" init -backend=false -input=false >/dev/null
     TF_DATA_DIR="${dir}/.terraform-validate" tf "${dir}" validate
   done
+  for dir in "${ROOT}"/infra/modules/*/; do
+    [[ -d "${dir}" ]] || continue
+    found=1
+    say "validate module $(basename "${dir}")"
+    TF_DATA_DIR="${dir}.terraform-validate" tf "${dir}" init -backend=false -input=false >/dev/null
+    TF_DATA_DIR="${dir}.terraform-validate" tf "${dir}" validate
+  done
   [[ "${found}" == 1 ]] || say "validate: no stacks yet"
 }
 

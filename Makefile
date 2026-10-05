@@ -60,7 +60,7 @@ lint: ## ruff check, shellcheck on deploy/ and scripts/, tflint on every stack
 	$(UV) run ruff check .
 	@files="$$(find deploy scripts -name '*.sh' 2>/dev/null)"; \
 		if [[ -n "$$files" ]]; then $(SHELLCHECK) $$files; else echo "lint: no shell scripts"; fi
-	@dirs="$$(for d in infra/bootstrap infra/stacks/*; do compgen -G "$$d/*.tf" >/dev/null && echo "$$d"; done; true)"; \
+	@dirs="$$(for d in infra/bootstrap infra/stacks/* infra/modules/*; do compgen -G "$$d/*.tf" >/dev/null && echo "$$d"; done; true)"; \
 		if [[ -z "$$dirs" ]]; then echo "lint: no Terraform stacks yet, tflint skipped"; exit 0; fi; \
 		command -v tflint >/dev/null || { echo "tflint not installed: https://github.com/terraform-linters/tflint#installation" >&2; exit 1; }; \
 		tflint --init --config "$$PWD/.tflint.hcl" >/dev/null; \
