@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars (gitignored). Values from .env.
+team_emails = ["you@example.com", "teammate@example.com"] # RW_TEAM_EMAILS
+
+# Defaults, change only if the sprint file changes:
+# region             = "us-east-1"
+# owner              = "noufa"
+# github_owner       = "noufasunkesula"
+# github_repo        = "ripwatch"
+# budget_usd         = 50 # RW_BUDGET_USD
+# bedrock_budget_usd = 10 # RW_BEDROCK_BUDGET_USD

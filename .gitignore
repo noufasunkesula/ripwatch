@@ -9,6 +9,7 @@ infra/backend.hcl
 **/.terraform/
 **/.terraform-local/
 **/.terraform-validate/
+**/.build/
 *.tfstate*
 
 # Python
@@ -28,3 +29,5 @@ work/
 
 # Node
 node_modules/
+# Lock files belong to root stacks only.
+infra/modules/**/.terraform.lock.hcl
