@@ -1,0 +1,8 @@
+# Which RipVIS test videos become which simulated camera (sprint-1.md N-13).
+# Saif picks 3 test videos per camera with clearly visible rips; until then the lists are empty
+# and make_replay_clips.py stops with a message. Paths are relative to data/ripvis/.
+cameras:
+  cam-01:
+    videos: []   # e.g. test/<video>.mp4 (Saif)
+  cam-02:
+    videos: []
