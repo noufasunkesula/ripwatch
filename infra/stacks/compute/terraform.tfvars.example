@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars (gitignored).
+cool_ami_id = "" # RW_COOL_AMI_ID: required to plan. AWS Marketplace, COOL subscription, Launch, us-east-1 (Sprint 2)
+
+# Defaults:
+# instance_type    = "c7g.large"
+# runtime          = "cool"     # std-arm if the COOL verification gate shows OpenCV 4 (north star 0)
+# bedrock_model_id = "amazon.nova-lite-v1:0"

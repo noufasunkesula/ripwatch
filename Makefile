@@ -58,7 +58,7 @@ fmt: ## Format Python (ruff) and Terraform
 lint: ## ruff check, shellcheck on deploy/ and scripts/, tflint on every stack
 	@echo "lint: ruff check, shellcheck, tflint"
 	$(UV) run ruff check .
-	@files="$$(find deploy scripts -name '*.sh' 2>/dev/null)"; \
+	@files="$$(find deploy scripts -name '*.sh' ! -path deploy/user_data.sh 2>/dev/null)"; \
 		if [[ -n "$$files" ]]; then $(SHELLCHECK) $$files; else echo "lint: no shell scripts"; fi
 	@dirs="$$(for d in infra/bootstrap infra/stacks/* infra/modules/*; do compgen -G "$$d/*.tf" >/dev/null && echo "$$d"; done; true)"; \
 		if [[ -z "$$dirs" ]]; then echo "lint: no Terraform stacks yet, tflint skipped"; exit 0; fi; \

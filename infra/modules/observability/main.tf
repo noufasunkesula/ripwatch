@@ -16,6 +16,7 @@ locals {
     { title = "Dead-letter queues", stat = "Maximum", metrics = [for q in var.dlq_names : ["AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", q]] },
     { title = "Jobs processed by mode", stat = "Sum", search = "{${local.ns},mode} MetricName=\"JobsProcessed\"" },
     { title = "Lambda errors", stat = "Sum", metrics = [for f in var.lambda_names : ["AWS/Lambda", "Errors", "FunctionName", f]] },
+    { title = "Worker CPU (%)", stat = "Average", metrics = [["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", var.asg_name]] },
   ]
 
   agent_widgets = [
