@@ -47,6 +47,7 @@ resource "aws_cloudwatch_log_group" "this" {
   tags              = local.tags
 }
 
+# nosemgrep: aws-lambda-x-ray-tracing-not-active -- X-Ray off to stay in free allowances; traces live in rw-agent-trace
 resource "aws_lambda_function" "this" {
   #checkov:skip=CKV_AWS_50:X-Ray off to stay inside free allowances; traces live in rw-agent-trace
   #checkov:skip=CKV_AWS_115:New accounts have a concurrency quota of 10; reserving would starve other functions

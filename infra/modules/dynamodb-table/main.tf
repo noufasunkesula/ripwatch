@@ -1,3 +1,4 @@
+# nosemgrep: aws-dynamodb-table-unencrypted -- encrypted with the AWS managed key (server_side_encryption below); a CMK costs monthly
 resource "aws_dynamodb_table" "this" {
   #checkov:skip=CKV_AWS_28:PITR is an input, off by default to save cost; detections and traces expire anyway
   #checkov:skip=CKV_AWS_119:AWS managed encryption by design (north star 15); a CMK costs monthly
