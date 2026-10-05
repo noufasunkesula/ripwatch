@@ -1,0 +1,10 @@
+# Used by `make checkov` and CI. No global skips: every skip is an inline
+# `#checkov:skip=<ID>:<reason>` on the resource it applies to.
+directory:
+  - infra
+framework:
+  - terraform
+soft-fail: false
+compact: true
+quiet: true
+download-external-modules: false

@@ -622,28 +622,28 @@ These are the agreements between vision, agent, API and dashboard. They are Pyda
 
 ### N-01 Repo scaffold
 - [ ] Use the existing repo `https://github.com/noufasunkesula/ripwatch.git`. Make sure it is private, add Saif and Daksh as collaborators, protect `main`: PR required, 1 approval, CI must pass, no force pushes. (Settings changes on GitHub are done by Noufa in the browser.)
-- [ ] Workflow files from `cloud-claude.md` section 9 exist: `CLAUDE.md`, `cloud-claude.md`, `handoff.md`, `scripts/now.py`, `scripts/progress.py`.
-- [ ] Create the layout from section 4 with empty `__init__.py` files.
+- [x] Workflow files from `cloud-claude.md` section 9 exist: `CLAUDE.md`, `cloud-claude.md`, `handoff.md`, `scripts/now.py`, `scripts/progress.py`.
+- [x] Create the layout from section 4 with empty `__init__.py` files.
 - [ ] Copy `01-project-description.md`, `02-infra-north-star.md`, `sprint-1.md` into `docs/`.
-- [ ] `.gitignore` must include: `.env`, `**/terraform.tfvars`, `infra/backend.hcl`, `**/backend_override.tf`, `**/tfplan-*`, `**/.terraform/`, `*.tfstate*`, `.venv/`, `data/`, `work/`, `*.mp4`, `*.zip`, `__pycache__/`, `.pytest_cache/`, `dist/`, `node_modules/`. Must **not** ignore `.terraform.lock.hcl`.
+- [x] `.gitignore` must include: `.env`, `**/terraform.tfvars`, `infra/backend.hcl`, `**/backend_override.tf`, `**/tfplan-*`, `**/.terraform/`, `*.tfstate*`, `.venv/`, `data/`, `work/`, `*.mp4`, `*.zip`, `__pycache__/`, `.pytest_cache/`, `dist/`, `node_modules/`. Must **not** ignore `.terraform.lock.hcl`.
 
 ### N-02 Tooling
-- [ ] `pyproject.toml` with project `rw`, version `0.1.0`, Python `>=3.12,<3.13`, and dependency groups:
+- [x] `pyproject.toml` with project `rw`, version `0.1.0`, Python `>=3.12,<3.13`, and dependency groups:
   - base: `boto3`, `pydantic>=2`, `numpy` (version range must be compatible with whatever COOL ships; constrained at install time on the worker), `aws-embedded-metrics`, `mcp`, `python-ulid`
   - optional `cv-std`: `opencv-python-headless==5.0.0.93`
   - optional `dev`: `pytest`, `pytest-cov`, `moto[server]`, `ruff`, `pip-audit`, `huggingface_hub`
   - **No** OpenCV in base or `worker`.
-- [ ] `uv lock`, commit `uv.lock`.
-- [ ] `ruff` config: line length 100, target `py312`, rules `E,F,I,B,UP,S` (S for security), allow `assert` in tests.
-- [ ] `.pre-commit-config.yaml`: ruff, ruff-format, terraform_fmt, gitleaks, shellcheck, end-of-file-fixer.
-- [ ] `.tflint.hcl` with the AWS ruleset plugin enabled.
-- [ ] `.checkov.yaml`: framework terraform, `soft-fail: false`. Every skip must be an inline `#checkov:skip=<ID>:<reason>` on the resource, never a global skip.
+- [x] `uv lock`, commit `uv.lock`.
+- [x] `ruff` config: line length 100, target `py312`, rules `E,F,I,B,UP,S` (S for security), allow `assert` in tests.
+- [x] `.pre-commit-config.yaml`: ruff, ruff-format, terraform_fmt, gitleaks, shellcheck, end-of-file-fixer.
+- [x] `.tflint.hcl` with the AWS ruleset plugin enabled.
+- [x] `.checkov.yaml`: framework terraform, `soft-fail: false`. Every skip must be an inline `#checkov:skip=<ID>:<reason>` on the resource, never a global skip.
 
 ### N-03 Config and environment
-- [ ] `.env.example` with every variable from section 2.2 and section 5, each with a comment saying what it is and where to get it.
-- [ ] `rw/common/config.py`: a frozen Pydantic `Settings` (or dataclass) loading from environment with the defaults from section 5. One function `get_settings()` cached with `functools.lru_cache`. Raises a clear error naming the missing variable when a required value is absent.
-- [ ] `infra/backend.hcl.example` and `make backend-config` that renders `infra/backend.hcl` from `.env` (`bucket = "rw-tfstate-${AWS_ACCOUNT_ID}"`, `region`, `encrypt = true`, `use_lockfile = true`). Each stack's `backend.tf` has only `terraform { backend "s3" { key = "<stack>/terraform.tfstate" } }` and gets the rest via `-backend-config=../../backend.hcl`.
-- [ ] `docs/sprint-2-inputs.md`: table of every value still needed for Sprint 2, who provides it, and the exact command or console page to get it.
+- [x] `.env.example` with every variable from section 2.2 and section 5, each with a comment saying what it is and where to get it.
+- [x] `rw/common/config.py`: a frozen Pydantic `Settings` (or dataclass) loading from environment with the defaults from section 5. One function `get_settings()` cached with `functools.lru_cache`. Raises a clear error naming the missing variable when a required value is absent.
+- [x] `infra/backend.hcl.example` and `make backend-config` that renders `infra/backend.hcl` from `.env` (`bucket = "rw-tfstate-${AWS_ACCOUNT_ID}"`, `region`, `encrypt = true`, `use_lockfile = true`). Each stack's `backend.tf` has only `terraform { backend "s3" { key = "<stack>/terraform.tfstate" } }` and gets the rest via `-backend-config=../../backend.hcl`.
+- [x] `docs/sprint-2-inputs.md`: table of every value still needed for Sprint 2, who provides it, and the exact command or console page to get it.
 
 ### N-04 `rw.common`
 | File | Must provide |
@@ -656,7 +656,7 @@ These are the agreements between vision, agent, API and dashboard. They are Pyda
 | `ids.py` | `new_id(prefix)` returning prefixed ULIDs (`res_`, `tr_`, `job_`, `inc_`, `dec_`) |
 | `heartbeat.py` | `beat(service)` writes the current epoch to `/var/run/rw/<service>.heartbeat` (path from config so tests use a tmp dir) |
 
-- [ ] Unit tests for every function above. `runtime.py` tested by monkeypatching `cv2.__file__` and installed distributions.
+- [x] Unit tests for every function above. `runtime.py` tested by monkeypatching `cv2.__file__` and installed distributions.
 
 ### N-05 Makefile
 Every target prints what it does and uses `AWS_PROFILE` from `.env`. Targets marked **READ** only read from AWS (plans, describes, logs) and are always allowed. Targets marked **CHANGE** modify AWS and require `RW_CONFIRM_APPLY=<stack or action name>` to match what is being changed; without it they print the rule from section 0 and exit 1. Claude Code only runs **CHANGE** targets after a human says "apply" (section 0.2).
@@ -1099,6 +1099,13 @@ Upgrade to Paid plan, apply bootstrap (if not done in Sprint 1), migrate bootstr
 | 2026-10-01 | Local AWS access via `aws configure --profile ripwatch` with per-person IAM users and access keys, instead of IAM Identity Center | Simpler for a 3-person, 4-week project; no Organization needed. Keys stay in `~/.aws/credentials`, Gitleaks guards the repo, MFA required for console | Noufa |
 | 2026-10-01 | `terraform plan` against real AWS is allowed anytime; apply and destroy only after a human says "apply" and confirms the plan | Catch real errors early without risking cost or changes | Noufa, Daksh |
 | 2026-10-01 | Lighter path (section 0.4) defined, decision point Sun Oct 4 | A known fallback if scope is too big | Noufa |
+| 2026-10-05 | Noufa is unavailable; Daksh runs Noufa's tasks (N-01 onward) in sessions logged as `noufa`, committing with his own git identity | Keep the N and D task streams separate in `handoff.md` while one person works both | Daksh |
+| 2026-10-05 | `sprint-1.md` and the north star moved into `docs/` (`docs/sprints/sprint-1.md`, `docs/02-infra-north-star.md`) as N-01 and `cloud-claude.md` expect; `docs/01-project-description.md` is not in the repo yet, added when available | Paths in `cloud-claude.md` and section 4 already point there | Daksh (for Noufa) |
+| 2026-10-05 | Dev extra also has `pre-commit` (needed by `make setup`) and `tzdata` (zoneinfo on Windows for `scripts/now.py`); ruff skips `*.md` so formatting never rewrites code snippets in docs | Tools the existing tasks already require | Daksh (for Noufa) |
+| 2026-10-05 | `Settings` keeps values with no safe default (queue URLs, topic ARN, account ID, buckets) optional at load; `settings.require(field)` raises naming the env var. Buckets derive `rw-<kind>-<account_id>` from `AWS_ACCOUNT_ID`. `RW_LLM` defaults to `fake` | Local and test runs need no AWS values; nothing calls Bedrock unless asked | Daksh (for Noufa) |
+| 2026-10-05 | `rw.common.metrics` sink is picked per process: Lambda (`AWS_LAMBDA_FUNCTION_NAME`) prints EMF, worker (`RW_RUNTIME` set) uses the aws-embedded-metrics agent sink with log group `/rw/worker/<service>`, otherwise in-memory. Unknown names raise only in memory mode; elsewhere they are dropped with a warning. `timed()` emits `FrameLatencyMs` with `stage` and `runtime` (`local` when unset). `.gitattributes` forces LF | Metrics must never crash the pipeline in AWS but must fail loudly in tests; CRLF breaks make and bash in WSL and on the worker | Daksh (for Noufa) |
+| 2026-10-05 | Makefile: Terraform logic lives in `scripts/tf.sh`; `RW_CONFIRM_APPLY` only counts from the command line or shell, never from `.env`; `plan-local` uses its own data dir and writes `tfplan-<stack>-local`, which `apply` never accepts; `down` skips `data` as well as `bootstrap` (tables would go too); shellcheck and checkov run through uv (`shellcheck-py`, `uv tool run checkov`), only tflint needs a system install | Guard against accidental applies; fewer tools to install | Daksh (for Noufa) |
+| 2026-10-05 | Terraform: Cognito hosted UI domain is `rw-<first 8 hex of sha1(account_id-name)>` instead of a random suffix (no `random` provider, stable across applies); `rw-agent-fallback-high` = `AgentFallbackUsed / RipCandidates` over 15 min; `s3-bucket` creates the versioning resource only when `versioning = true`; ASG collects `GroupInServiceInstances` for the 14 h alarm; `make tf-validate` and `lint` also cover `infra/modules/*` | Section 3 allows only the aws and archive providers; the north star alarms need a defined denominator and a metric source | Daksh (for Noufa) |
 | | | | |
 
 ---
