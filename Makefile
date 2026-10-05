@@ -131,6 +131,11 @@ release: ## Build the wheel and requirements-worker.txt into dist/<git_sha>/ (no
 	$(UV) export --frozen --no-dev --no-hashes --no-emit-project --format requirements-txt \
 		-o dist/$(SHA)/requirements-worker.txt >/dev/null
 	@! grep -qi '^opencv' dist/$(SHA)/requirements-worker.txt || { echo "OpenCV in worker requirements" >&2; exit 1; }
+	@# Worker-side files rw_deploy.sh installs from the release.
+	@mkdir -p dist/$(SHA)/systemd
+	@cp deploy/rw_deploy.sh deploy/logrotate-rw deploy/constraints.txt dist/$(SHA)/
+	@cp deploy/systemd/rw-*.service dist/$(SHA)/systemd/
+	@echo "release: $$(ls dist/$(SHA) | xargs)"
 
 # ------------------------------------------------------------------ AWS: READ
 whoami: ## READ: aws sts get-caller-identity, fails if the caller is root
