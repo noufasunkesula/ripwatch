@@ -1,0 +1,6 @@
+# (e) The model keeps calling tools: the 7th call hits the limit and the fallback takes over.
+turns:
+  - repeat: 7
+    tool_use:
+      - name: get_flow_stats
+        input: {trace_id: "{trace_id}", camera_id: "{camera_id}"}

@@ -1,0 +1,3 @@
+# (d) The model call fails: the rule-based fallback must act.
+turns:
+  - raise: "ThrottlingException: Rate exceeded"

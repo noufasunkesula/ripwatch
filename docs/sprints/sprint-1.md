@@ -988,7 +988,7 @@ Permissions: `contents: read` by default, `id-token: write` only on jobs that lo
 
 **`prompts.py`:** system prompt (kept under 600 tokens) that states: role (lifeguard assistant, never takes public action without approval), tools and when to use them, the decision rules, the requirement to zoom before alerting when confidence < 0.85 or glare > 0.3, image mode rules (request follow-up capture when uncertain), and the output contract (always end with `submit_decision`). The user message contains a compact JSON summary of the candidate, result summary, top 3 rips, swimmers at risk, quality, active incident, and pre-risk level. Never the full result.
 
-- [ ] Tests with `FakeLLM` scenarios: (a) confident rip with swimmer → zoom → alert + approval request; (b) uncertain rip → zoom → confidence drops → `close_false_alarm`, `FalseAlarmsRejected` emitted; (c) image mode uncertain → `request_followup_capture` → `watch`; (d) Bedrock raises → fallback path; (e) model loops tools 7 times → limit → fallback; (f) duplicate within cooldown → suppressed, no LLM call. Each test asserts the trace steps in order.
+- [x] Tests with `FakeLLM` scenarios: (a) confident rip with swimmer → zoom → alert + approval request; (b) uncertain rip → zoom → confidence drops → `close_false_alarm`, `FalseAlarmsRejected` emitted; (c) image mode uncertain → `request_followup_capture` → `watch`; (d) Bedrock raises → fallback path; (e) model loops tools 7 times → limit → fallback; (f) duplicate within cooldown → suppressed, no LLM call. Each test asserts the trace steps in order.
 
 ### D-06 Incident lifecycle and watching (`lifecycle.py`)
 
@@ -1036,6 +1036,19 @@ Single handler, routes on `event["routeKey"]`. Auth claims from `event["requestC
 - [ ] Test: image upload uncertain → follow-up request on the job.
 
 ---
+
+### 9.5 Deterministic risk rules (`rw/agent/risk.py`)
+
+Pre-risk for the agent prompt and the level the fallback acts on. First match wins (`c` = `summary.max_confidence`). Thresholds live in SSM `/rw/risk/thresholds` (`{"high_confidence": 0.85, "near_rip_px": 30, "poor_glare": 0.3}`); an empty `{}` means these defaults.
+
+| Level | When |
+|---|---|
+| `CRITICAL` | status `rip` and at least 1 swimmer inside a rip polygon (`in_rip_id` set) |
+| `HIGH` | status `rip` and (`c >= high_confidence`, or a swimmer within `near_rip_px` of a rip, or an NWS Rip Current / Beach Hazards Statement is active) |
+| `ELEVATED` | status `rip` otherwise, or status `uncertain` with a swimmer within `near_rip_px` or an active rip statement |
+| `LOW` | everything else |
+
+Adjustments: `image` mode is capped at `ELEVATED` (one photo has no motion evidence) unless a swimmer is inside a rip, which gives `HIGH`. Poor quality (`glare > poor_glare` or `low_light`) lowers the level by one, never below `LOW` and never from `CRITICAL`. The fallback policy in D-05 step 7 acts on this level.
 
 ## 10. Joint task J-01: local end-to-end demo
 
@@ -1116,6 +1129,7 @@ Upgrade to Paid plan, apply bootstrap (if not done in Sprint 1), migrate bootstr
 | 2026-10-05 | Makefile: Terraform logic lives in `scripts/tf.sh`; `RW_CONFIRM_APPLY` only counts from the command line or shell, never from `.env`; `plan-local` uses its own data dir and writes `tfplan-<stack>-local`, which `apply` never accepts; `down` skips `data` as well as `bootstrap` (tables would go too); shellcheck and checkov run through uv (`shellcheck-py`, `uv tool run checkov`), only tflint needs a system install | Guard against accidental applies; fewer tools to install | Daksh (for Noufa) |
 | 2026-10-05 | Terraform: Cognito hosted UI domain is `rw-<first 8 hex of sha1(account_id-name)>` instead of a random suffix (no `random` provider, stable across applies); `rw-agent-fallback-high` = `AgentFallbackUsed / RipCandidates` over 15 min; `s3-bucket` creates the versioning resource only when `versioning = true`; ASG collects `GroupInServiceInstances` for the 14 h alarm; `make tf-validate` and `lint` also cover `infra/modules/*` | Section 3 allows only the aws and archive providers; the north star alarms need a defined denominator and a metric source | Daksh (for Noufa) |
 | 2026-10-05 | D-04: incident status changes go through `rw/agent/lifecycle_rules.py` (stdlib-only status and transition tables from the D-06 diagram, packaged by rw-api later); `alert` from `alerted` is allowed so `alert_lifeguard` and `request_approval` can both run. `create_incident` is idempotent per `result_id` by scanning `rw-incidents` (no result_id index; fine at demo scale). The snapshot renderer is injected (`ToolDeps.renderer`, default `rw.vision.draw.draw_overlay` once N-11 is on main, plain polygons until then) plus a RipWatch caption bar. Action-tool dependencies are optional in `ToolDeps`; a tool without its table answers with a readable error | D-04 needs the D-06 rules before D-06; avoids a stacked dependency on N-11 | Daksh |
+| 2026-10-05 | Section 9.5 risk rules written (it was referenced but missing): CRITICAL swimmer in a rip; HIGH rip with c >= 0.85, a swimmer within 30 px or an active NWS rip statement; ELEVATED other rips or uncertain with people/statement; LOW otherwise; image mode capped at ELEVATED; poor quality one level lower. Demo beach: Panama City Beach FL, camera at 30.1757,-85.8054, NOAA CO-OPS `8729108` (Panama City, tide predictions), NWS zone `FLZ112` (office TAE), `RW_NWS_USER_AGENT=RipWatch/0.1 (dakshsawhney2@gmail.com)`, all verified against the NOAA metadata and NWS points APIs | D-05 pre-risk and fallback need fixed rules; D-08 needs a verified station and zone | Daksh |
 | | | | |
 
 ---

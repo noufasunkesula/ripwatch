@@ -1,0 +1,16 @@
+# (c) One uncertain photo: ask for a clip of the spot, open an incident, keep watching.
+turns:
+  - tool_use:
+      - name: request_followup_capture
+        input: {trace_id: "{trace_id}", camera_id: "{camera_id}", job_id: "{job_id}",
+                message: "Please send a 10 second clip of the dark gap in the surf."}
+  - tool_use:
+      - name: create_incident
+        input: {trace_id: "{trace_id}", camera_id: "{camera_id}", result_id: "{result_id}",
+                risk_level: ELEVATED, summary: "Possible rip in a photo, clip requested"}
+  - tool_use:
+      - name: set_watch
+        input: {trace_id: "{trace_id}", incident_id: "{incident_id}", clips: 2, reason: "waiting for a clip"}
+  - tool_use:
+      - name: submit_decision
+        input: {decision: watch, risk_level: ELEVATED, reasons: ["photo only, follow-up requested"]}
