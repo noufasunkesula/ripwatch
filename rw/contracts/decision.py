@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
@@ -18,27 +17,7 @@ from rw.contracts.base import (
     Timestamp,
     TraceId,
 )
-
-
-class DecisionKind(StrEnum):
-    IGNORE = "ignore"
-    WATCH = "watch"
-    ALERT = "alert"
-    RESOLVE = "resolve"
-    CLOSE_FALSE_ALARM = "close_false_alarm"
-
-
-class RiskLevel(StrEnum):
-    LOW = "LOW"
-    ELEVATED = "ELEVATED"
-    HIGH = "HIGH"
-    CRITICAL = "CRITICAL"
-
-
-class Action(StrEnum):
-    RAISE_RED_FLAG = "raise_red_flag"
-    PA_ANNOUNCEMENT = "pa_announcement"
-    DISPATCH_LIFEGUARD = "dispatch_lifeguard"
+from rw.contracts.enums import Action, ApprovalDecision, DecisionKind, RiskLevel
 
 
 class AgentDecision(Contract):
@@ -69,11 +48,6 @@ class AgentDecision(Contract):
         if self.requested_action is not None and self.decision != DecisionKind.ALERT:
             raise ValueError("requested_action is only allowed with decision alert")
         return self
-
-
-class ApprovalDecision(StrEnum):
-    APPROVE = "approve"
-    REJECT = "reject"
 
 
 class Approval(Contract):

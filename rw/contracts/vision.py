@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import Field, ValidationInfo, model_validator
@@ -27,29 +26,7 @@ from rw.contracts.base import (
     TrackId,
     UnitScore,
 )
-
-
-class Mode(StrEnum):
-    VIDEO = "video"
-    BURST = "burst"
-    IMAGE = "image"
-
-
-class RuntimeVariant(StrEnum):
-    COOL = "cool"
-    STD_ARM = "std-arm"
-    STD_X86 = "std-x86"
-
-
-class Status(StrEnum):
-    RIP = "rip"
-    UNCERTAIN = "uncertain"
-    CLEAR = "clear"
-
-
-class RipLabel(StrEnum):
-    RIP = "rip"
-    UNCERTAIN = "uncertain"
+from rw.contracts.enums import JobSource, JobStatus, Mode, RipLabel, RuntimeVariant, Status
 
 
 def classify(confidence: float, rip_threshold: float, uncertain_threshold: float) -> Status:
@@ -235,19 +212,6 @@ class VisionResult(Contract):
         if size >= MAX_MESSAGE_BYTES:
             raise ValueError(f"serialized size {size} bytes is not under {MAX_MESSAGE_BYTES}")
         return self
-
-
-class JobSource(StrEnum):
-    CAMERA_SIM = "camera_sim"
-    UPLOAD = "upload"
-
-
-class JobStatus(StrEnum):
-    AWAITING_UPLOAD = "awaiting_upload"
-    QUEUED = "queued"
-    PROCESSING = "processing"
-    DONE = "done"
-    FAILED = "failed"
 
 
 class Job(Contract):

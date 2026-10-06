@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Annotated, Any, Literal
 
 from pydantic import Field
@@ -14,21 +13,11 @@ from rw.contracts.base import (
     TraceId,
     prefixed_id,
 )
+from rw.contracts.enums import StepType
 
 # trace_key is the incident_id once an incident exists, else cand_<result_id>.
 _TRACE_KEY = rf"(?:{prefixed_id('inc')[1:-1]}|cand_{prefixed_id('res')[1:-1]})"
 TraceKey = Annotated[str, Field(pattern=rf"^{_TRACE_KEY}$")]
-
-
-class StepType(StrEnum):
-    CANDIDATE_RECEIVED = "candidate_received"
-    LLM_CALL = "llm_call"
-    TOOL_CALL = "tool_call"
-    DECISION = "decision"
-    STATUS_CHANGE = "status_change"
-    FALLBACK = "fallback"
-    SUPPRESSED_DUPLICATE = "suppressed_duplicate"
-    HUMAN_APPROVAL = "human_approval"
 
 
 class TraceStep(Contract):
