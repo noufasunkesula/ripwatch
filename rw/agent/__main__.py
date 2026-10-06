@@ -99,7 +99,8 @@ async def run_once(agent: Agent, sqs: Any, queue_url: str) -> int:
     return deleted
 
 
-async def serve() -> None:
+def build_agent(mcp_client: Client, llm: LLMClient | None = None) -> Agent:
+    """The Agent wired to AWS (or moto) from settings and SSM, calling tools through mcp_client."""
     settings = get_settings()
     ssm = client("ssm")
     params = ssm_values(ssm, settings.ssm_prefix)
@@ -109,24 +110,29 @@ async def serve() -> None:
         cooldown_s=float(params.get("agent/cooldown_s", 60)),
     )
     dynamodb = resource("dynamodb")
+    return Agent(
+        AgentDeps(
+            llm=llm or make_llm(settings, model_id),
+            tools=McpTools(mcp_client),
+            store=DynamoDetectionStore(dynamodb.Table(settings.table_detections)),
+            incidents=dynamodb.Table(settings.table_incidents),
+            trace_sink=DynamoTraceSink(dynamodb.Table(settings.table_trace)),
+            cooldown=Cooldown(),
+            rip_statement_active=rip_statement_reader(ssm, settings.ssm_prefix),
+            thresholds=RiskThresholds.from_json(params.get("risk/thresholds")),
+            limits=limits,
+            clock=lambda: datetime.now(UTC),
+        )
+    )
+
+
+async def serve() -> None:
+    settings = get_settings()
     sqs = client("sqs")
     queue_url = settings.require("queue_candidates_url")
     async with Client(f"http://{HOST}:{PORT}/mcp") as mcp_client:
-        agent = Agent(
-            AgentDeps(
-                llm=make_llm(settings, model_id),
-                tools=McpTools(mcp_client),
-                store=DynamoDetectionStore(dynamodb.Table(settings.table_detections)),
-                incidents=dynamodb.Table(settings.table_incidents),
-                trace_sink=DynamoTraceSink(dynamodb.Table(settings.table_trace)),
-                cooldown=Cooldown(),
-                rip_statement_active=rip_statement_reader(ssm, settings.ssm_prefix),
-                thresholds=RiskThresholds.from_json(params.get("risk/thresholds")),
-                limits=limits,
-                clock=lambda: datetime.now(UTC),
-            )
-        )
-        log.info("agent_ready", extra={"model_id": model_id, "llm": settings.llm})
+        agent = build_agent(mcp_client)
+        log.info("agent_ready", extra={"model_id": agent.deps.llm.model_id, "llm": settings.llm})
         while True:
             beat(SERVICE)
             await run_once(agent, sqs, queue_url)
