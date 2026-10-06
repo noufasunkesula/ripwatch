@@ -39,6 +39,12 @@ TRANSITIONS: dict[str, dict[str, str]] = {
 }
 EVENTS = frozenset(e for moves in TRANSITIONS.values() for e in moves)
 
+# Follow-up counters on the incident row (D-06); they count within one status, so every status
+# change (here or in rw-api) sets them back to these values.
+FOLLOWUP_COUNTERS = {"followup_clear_streak": 0, "followup_rip_hits": 0}
+RESOLVE_AFTER_CLEAR = 3  # clear follow-ups in a row: the rip is gone
+CONFIRM_AFTER_RIP = 2  # follow-ups with the rip after approval: confirmed
+
 
 class InvalidTransition(ValueError):
     """The event is not allowed from the incident's current status."""
