@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Literal
 
 from pydantic import model_validator
@@ -17,13 +16,8 @@ from rw.contracts.base import (
     Timestamp,
     TraceId,
 )
+from rw.contracts.enums import CandidateReason
 from rw.contracts.vision import Mode, Status
-
-
-class CandidateReason(StrEnum):
-    STATUS_RIP = "status_rip"
-    STATUS_UNCERTAIN = "status_uncertain"
-    ACTIVE_INCIDENT_FOLLOWUP = "active_incident_followup"
 
 
 class CandidateMessage(Contract):
