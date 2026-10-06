@@ -148,19 +148,19 @@ Never cut: the contract, agent loop with tools, fallback, human approval, traces
 - [ ] `make check` passes: ruff, pytest (unit + local integration), terraform fmt + validate on every stack, tflint, checkov (no HIGH or CRITICAL findings, every skip justified inline)
 - [ ] `make local-up && make local-demo` runs the full loop on a laptop with moto server and the fake LLM, and prints an incident with a full agent trace and an approval
 - [ ] Vision result JSON contract v1 agreed by Saif and Daksh, committed as Pydantic models + generated JSON Schema, validated by tests on both producer and consumer sides
-- [ ] All 7 Terraform stacks + bootstrap written, with `terraform.tfvars.example` and documented inputs
+- [x] All 7 Terraform stacks + bootstrap written, with `terraform.tfvars.example` and documented inputs
 - [ ] Noufa and Daksh both have working `aws configure --profile ripwatch` and `aws sts get-caller-identity` shows their IAM user (not root)
 - [ ] `terraform plan` is clean (no errors, expected resource counts) for `bootstrap`, and for `network` and `data` via `make plan-local`. Plan outputs summarized in `handoff.md`
-- [ ] Nothing applied without a logged human "apply" (`handoff.md` shows who, when, what)
-- [ ] Worker runtime written: user data, systemd units, deploy script, SSM deploy document, CloudWatch agent config, runtime check
-- [ ] All 4 Lambdas written with unit tests
-- [ ] All 11 MCP tools written with unit tests
-- [ ] Agent loop written with fake model, fallback policy, cooldown, incident lifecycle, trace writing
-- [ ] Data scripts written: RipVIS download, replay clip cutting, upload to S3 (not run against AWS yet)
-- [ ] Bench harness written and run locally on one machine (laptop numbers, labeled as such)
-- [ ] CI workflows written. `deploy.yml` is guarded and does nothing until Sprint 2
-- [ ] `docs/sprint-2-inputs.md` lists every value Sprint 2 still needs, with where to get it
-- [ ] Decision Log at the bottom of this file is up to date
+- [x] Nothing applied without a logged human "apply" (`handoff.md` shows who, when, what)
+- [x] Worker runtime written: user data, systemd units, deploy script, SSM deploy document, CloudWatch agent config, runtime check
+- [x] All 4 Lambdas written with unit tests
+- [x] All 11 MCP tools written with unit tests
+- [x] Agent loop written with fake model, fallback policy, cooldown, incident lifecycle, trace writing
+- [x] Data scripts written: RipVIS download, replay clip cutting, upload to S3 (not run against AWS yet)
+- [x] Bench harness written and run locally on one machine (laptop numbers, labeled as such)
+- [x] CI workflows written. `deploy.yml` is guarded and does nothing until Sprint 2
+- [x] `docs/sprint-2-inputs.md` lists every value Sprint 2 still needs, with where to get it
+- [x] Decision Log at the bottom of this file is up to date
 
 ---
 
