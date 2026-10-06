@@ -8,6 +8,12 @@ variable "source_dir" {
   type        = string
 }
 
+variable "extra_files" {
+  description = "Extra files to add to the zip: path inside the zip => source file (shared stdlib-only modules)."
+  type        = map(string)
+  default     = {}
+}
+
 variable "handler" {
   description = "Handler, e.g. handler.handler."
   type        = string

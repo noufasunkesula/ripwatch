@@ -22,8 +22,8 @@ htmlcov/
 dist/
 
 # Data and media
-data/
-work/
+/data/
+/work/
 *.mp4
 *.zip
 
