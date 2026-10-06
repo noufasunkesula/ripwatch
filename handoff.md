@@ -28,15 +28,15 @@ Shared session log for Sprint 1. Rules in `cloud-claude.md` sections 6 to 8. App
 
 | Task | Title | Status | Branch | PR |
 |---|---|---|---|---|
-| D-01 | Contracts | in-review | daksh/D-01-contracts | #1 |
-| D-02 | Trace and decision helpers | in-review | daksh/D-02-trace | #2 |
-| D-03 | MCP server and data tools | in-review | daksh/D-03-mcp-tools | #3 |
-| D-04 | MCP action tools | todo | | |
-| D-05 | Agent loop | todo | | |
-| D-06 | Incident lifecycle and watching | todo | | |
-| D-07 | `rw-api` Lambda | todo | | |
-| D-08 | `rw-ocean-poller` Lambda | todo | | |
-| D-09 | Local integration tests | todo | | |
+| D-01 | Contracts | done | daksh/D-01-contracts | #1 |
+| D-02 | Trace and decision helpers | in-review | daksh/D-03-mcp-tools | #10 |
+| D-03 | MCP server and data tools | in-review | daksh/D-03-mcp-tools | #10 |
+| D-04 | MCP action tools | in-review | daksh/D-04-action-tools | #11 |
+| D-05 | Agent loop | in-review | daksh/D-05-agent-loop | #12 |
+| D-06 | Incident lifecycle and watching | in-review | daksh/D-06-lifecycle | #13 |
+| D-07 | `rw-api` Lambda | in-review | daksh/D-07-rw-api | #14 |
+| D-08 | `rw-ocean-poller` Lambda | in-review | daksh/D-08-ocean-poller | #15 |
+| D-09 | Local integration tests | in-review | daksh/D-09-integration | #16 |
 
 ## Task board: Joint
 
@@ -57,6 +57,10 @@ Statuses: `todo`, `in-progress`, `in-review`, `done`, `cut`.
 - (from daksh, 2026-10-02) Join the contract sync with Saif: his request to use original-image pixel coordinates (plus image size) changes what baseline vision emits in N-11.
 - (from daksh, 2026-10-03) rw-detections item format for ingest (N-11): write items with `rw.mcp_tools.store.to_item(result)` (or `DynamoDetectionStore.put`). Fields: `camera_id`, `ts_result` = `<start_ts as %Y-%m-%dT%H:%M:%S.%fZ>#<result_id>` (fixed width so string order is time order), `result_id` (needed because a Query cannot filter on key attributes), `expires_at` = created_at + 24 h, `result` = VisionResult JSON string. The table in N-08 needs nothing extra (no GSI).
 - (from daksh, 2026-10-03) Dependencies for D-03 in `pyproject.toml` (N-02): `mcp>=2.3,<3` (2.x renamed FastMCP to MCPServer), `boto3`, `moto[server]` (dev), `opencv-python-headless==5.0.0.93` (cv-std). Also ruff `line-length = 100` (existing code uses it).
+- (from daksh, 2026-10-06) rw-api IAM (N-09 serverless `api` policy): add `dynamodb:PutItem` on `rw-agent-trace` to `WriteTables`. Approvals append `human_approval` and `status_change` steps to the incident trace (D-07).
+- (from daksh, 2026-10-06) rw-api env (N-09): add `RW_VERSION` (git sha) so `GET /api/health` reports it; it falls back to `dev`.
+- (from daksh, 2026-10-06) Lambda import test (N-12 `tests/unit/lambdas/test_lambda_imports.py`): also allow a Lambda's own sibling modules (`lambdas/api` has `handler`, `routes`, `auth`, `presign` importing each other by bare name, as in the zip).
+- (from daksh, 2026-10-06) Ingest (N-11): uploads land at `incoming/<camera_id>/<job_id>.<ext>` or `incoming/upload/<job_id>.<ext>`; the `rw-jobs` row already exists (`status=awaiting_upload`, `source=upload`, `camera_id` = the camera or `cam-00`). Take `job_id` from the file name and update that row instead of creating one.
 
 ### For Daksh
 - (none)
@@ -164,3 +168,37 @@ Statuses: `todo`, `in-progress`, `in-review`, `done`, `cut`.
   - Commits: d89b5cb, 3c2f87f, 319544c, 82decc2, c8c15df, b5743fd, 34883bd (all D-03)
   - PRs opened (reviewer noufa): #1 D-01 -> main, #2 D-02 -> D-01, #3 D-03 -> D-02 (stacked; retarget each after the one below merges). D-01, D-02, D-03 now in-review
   - Next: D-04 action tools (branch from daksh/D-03-mcp-tools); contract sync with Saif as a follow-up to #1
+
+### Session 5: daksh
+- Start: Monday 05 October 2026, 16:47 IST
+- Branch: daksh/D-03-mcp-tools (merged main, PR #10), then daksh/D-04-action-tools
+- Recovered (Tuesday 06 October 2026, 14:50 IST, session had no End line):
+  - Commits: 5dd3e14 refactor(mcp-tools) use rw.common (D-03); bd2b35f feat(mcp-tools) six action tools + lifecycle rules (D-04); both pushed
+  - Created daksh/D-05-agent-loop from bd2b35f and wrote D-05 uncommitted: rw/agent/{__main__,cooldown,fake_llm,fallback,llm,loop,prompts,risk,tools}.py, DynamoTraceSink in trace.py, 5 FakeLLM scripts, 3 test files; sprint-1.md section 9.5 + Decision Log row (risk rules, demo beach)
+  - State at recovery: 325 unit tests pass, ruff format clean, ruff check 7 errors (6 line length, 1 import order); tests/fixtures/.gitkeep deleted
+  - Not done: scenario (f) cooldown test coverage unverified, D-05 checkbox not ticked, nothing committed
+
+### Session 6: daksh
+- Start: Tuesday 06 October 2026, 14:48 IST
+- End: Tuesday 06 October 2026, 15:28 IST (40 min)
+- Branch: daksh/D-05-agent-loop, then stacked daksh/D-06-lifecycle, daksh/D-07-rw-api, daksh/D-08-ocean-poller, daksh/D-09-integration
+- Tasks: D-05 (todo -> in-review, #12), D-06 (todo -> in-review, #13), D-07 (todo -> in-review, #14), D-08 (todo -> in-review, #15), D-09 (todo -> in-review, #16, partial)
+- Done:
+  - Recovered session 5; D-05 lint fixes (7 ruff errors), committed
+  - D-06: lifecycle.transition() as the only status writer (MCP tools included), status_change steps, rule-based follow-ups (watch countdown, approved confirm/resolve, alerted waits), Decimal fix in the prompt
+  - D-07: rw-api Lambda, 10 routes, approval flow, uploads, media; contract enums moved to stdlib-only rw/contracts/enums.py
+  - D-08: rw-ocean-poller with recorded NOAA/NWS fixtures, live test passed once (RW_RUN_NETWORK=1)
+  - D-09: integration tests on moto server + MCP over HTTP: alert -> approval -> confirmed, and image follow-up request; ingest step skipped (N-11 missing)
+  - Checks at end: 453 passed, 2 skipped (network, N-11); ruff check and format clean; schema check clean
+- Next step: when Noufa's N-11 ingest and N-13 local_seed land, un-skip `test_clip_upload_through_ingest_to_candidate` and switch the integration fixture to `local_seed.seed()` (tests/integration/conftest.py); then J-01 local demo. Meanwhile, address review comments on #11 to #16 and retarget each PR to main as the one below merges
+- Blockers: N-11 ingest/camera-sim not written on any branch (blocks D-09 completion and J-01); N-13 #8 not merged; gh CLI not logged in (PRs opened through the GitHub connector)
+- Decisions: 4 rows in sprint-1.md Decision Log on 2026-10-06 (D-06 follow-up rules, D-07 rw-api choices, D-08 poller behavior, D-09 scope)
+- Requests created: for noufa, rw-api PutItem on rw-agent-trace (needed before deploy); RW_VERSION env; Lambda import test allows sibling modules; ingest updates the existing upload job row
+- Shared files touched: pyproject.toml (`network` pytest marker), handoff.md
+- Commits: b0dafe7 (D-05); 9213160 (D-06); c0ceb7f, c0b5488 (D-07); b0572f1 (D-08); d8362d1 (D-09); plus this end entry
+- Pushed: yes (origin/daksh/D-05-agent-loop to origin/daksh/D-09-integration); end entry push pending
+- Resume with:
+  - git checkout daksh/D-09-integration && git pull
+  - uv sync --extra dev
+  - uv run pytest tests -q
+  - open tests/integration/conftest.py
