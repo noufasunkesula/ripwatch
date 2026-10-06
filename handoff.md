@@ -21,7 +21,7 @@ Shared session log for Sprint 1. Rules in `cloud-claude.md` sections 6 to 8. App
 | N-11 | Adapters, ingest, camera-sim, baseline vision | in-progress | noufa/N-11-vision | |
 | N-12 | Lambdas: scheduler, kill switch | in-review | noufa/N-12-lambdas | #7 |
 | N-13 | Data scripts | in-review | noufa/N-13-data-scripts | #8 |
-| N-14 | Bench harness | todo | | |
+| N-14 | Bench harness | in-progress | noufa/N-14-bench | |
 | N-15 | CI | in-review | noufa/N-15-ci | #9 |
 
 ## Task board: Daksh
@@ -103,9 +103,31 @@ Statuses: `todo`, `in-progress`, `in-review`, `done`, `cut`.
 
 ### Session 2: noufa
 - Start: Tuesday 06 October 2026, 15:30 IST
+- End: Tuesday 06 October 2026, 15:53 IST (23 min)
 - Operator: Daksh, working Noufa's tasks (Decision Log 2026-10-05)
-- Branch: noufa/N-11-vision (merged origin/daksh/D-04-action-tools for store.to_item and lifecycle_rules)
+- Branch: noufa/N-11-vision (merged origin/daksh/D-04-action-tools for store.to_item and lifecycle_rules), then noufa/N-14-bench (from N-11); small commits on noufa/N-08-stacks-core, noufa/N-15-ci, noufa/N-12-lambdas
+- Tasks: N-11 (in-progress, code complete: step 3 done, no PR yet), N-14 (todo -> in-progress, code complete, no PR yet); N-09, N-12, N-15 Requests done on their open PRs
+- Done:
+  - N-11 step 3: rw/ingest (jobs.py, __main__.py), rw/camera_sim, rw/vision/__main__.py (active_cameras.json); RW_STATE_DIR setting; 15 tests
+  - Daksh's Requests: ingest writes via store.to_item and updates rw-api's upload job row (N-11); rw-api PutItem on rw-agent-trace and RW_VERSION via api_version (N-09, #5); deploy.yml TF_VAR_api_version = git sha (N-15, #9); Lambda import guard allows sibling modules (N-12, #7, verified against D-09's lambdas)
+  - N-14: rw.bench (stages, report, prices.yaml, charts), 6 tests, laptop run below
+  - pyyaml base dependency (approved suggested change), matplotlib in dev
+  - Checks at end: 344 passed, 1 skipped (shellcheck); ruff clean; schema check clean; pip-audit clean; actionlint clean on deploy.yml
 - Note: handoff.md rebuilt as the union of noufa/N-15-ci (Noufa board, session 1 end, Requests for Daksh) and daksh/D-09-integration (Daksh board, sessions 5 and 6, Requests for Noufa); each branch had its own stale copy
+- Bench, laptop, not a benchmark result (`python -m rw.bench`, synthetic clip, 300 frames + 50 warmup, Windows AMD64, opencv-python-headless 5.0.0, run 20261006T101918Z):
+  - FPS 74.4; processing 0.067 s per second of video; CPU 325 % (OpenCV threads); max RSS n/a on Windows; cost n/a (instance type local)
+  - ms per frame (mean / p95): decode 0.75 / 0.79, preprocess 0.69 / 0.72, stabilize 4.45 / 4.59, timex 0.11 / 0.12, flow 7.41 / 7.70, detect 0.03 / 0.04, total 13.44 / 13.75
+- Next step: push the noufa branches and open PRs for N-11 (base daksh/D-04-action-tools) and N-14 (base N-11); then, in a daksh session, un-skip D-09's ingest test and switch its fixture to local_seed (after N-13 #8 merges); then J-01 local demo
+- Blockers: terraform not installed on this machine (serverless edit not fmt/validated locally; CI tf-validate covers it once #9 is on main); no ripwatch AWS profile; N-01 GitHub settings and docs/01-project-description.md need Noufa; shellcheck and tflint not installed
+- Decisions: 2 rows in docs/sprints/sprint-1.md Decision Log on 2026-10-06 (N-11 step 3 ingest/candidates/RW_STATE_DIR; pyyaml base dep and bench method)
+- Requests created: none
+- Shared files touched: pyproject.toml and uv.lock (pyyaml, matplotlib), .env.example (RW_STATE_DIR), handoff.md (rebuilt as the union of the N-15-ci and D-09 copies)
+- Commits: 2bb98ed (merge D-04 into N-11), 0f32674 (N-11); ff78eb4 (N-09, #5); 591355b (N-15, #9); 77443a2 (N-12, #7); 6a6114e (N-14); plus this end entry
+- Pushed: no (push question follows)
+- Resume with:
+  - git checkout noufa/N-14-bench
+  - uv sync --extra dev --extra cv-std
+  - uv run pytest tests -q
 
 ---
 

@@ -13,6 +13,8 @@ dependencies = [
     # mcp 2.x renamed FastMCP to MCPServer (Decision Log 2026-10-03).
     "mcp>=2.3,<3",
     "python-ulid>=3.0",
+    # rw.bench prices.yaml and FakeLLM scripts; must be on the worker, not only in dev.
+    "pyyaml>=6",
 ]
 
 [project.optional-dependencies]
@@ -28,6 +30,8 @@ dev = [
     "pre-commit>=4",
     # zoneinfo data for scripts/now.py on Windows.
     "tzdata>=2024.1",
+    # rw.bench charts (sprint-1.md N-14); the bench writes CSV and JSON without it.
+    "matplotlib>=3.9",
 ]
 
 [build-system]
