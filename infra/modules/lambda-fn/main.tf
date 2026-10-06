@@ -1,12 +1,27 @@
 locals {
   tags = merge({ ManagedBy = "terraform", Project = "ripwatch" }, var.tags)
+
+  # Every file under source_dir (minus bytecode) plus extra_files, as zip path => source path.
+  package_files = merge(
+    {
+      for f in fileset(var.source_dir, "**") : f => "${var.source_dir}/${f}"
+      if !strcontains(f, "__pycache__") && !endswith(f, ".pyc")
+    },
+    var.extra_files,
+  )
 }
 
 data "archive_file" "this" {
   type        = "zip"
-  source_dir  = var.source_dir
   output_path = "${path.root}/.build/${var.name}.zip"
-  excludes    = ["__pycache__", "**/__pycache__/**", "**/*.pyc"]
+
+  dynamic "source" {
+    for_each = local.package_files
+    content {
+      filename = source.key
+      content  = file(source.value)
+    }
+  }
 }
 
 data "aws_iam_policy_document" "assume" {

@@ -1,0 +1,24 @@
+{
+  "agent": {
+    "run_as_user": "root",
+    "logfile": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log"
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          { "file_path": "/var/log/rw/rw-camera-sim.log", "log_group_name": "/rw/worker/rw-camera-sim", "log_stream_name": "{instance_id}", "retention_in_days": 7 },
+          { "file_path": "/var/log/rw/rw-ingest.log", "log_group_name": "/rw/worker/rw-ingest", "log_stream_name": "{instance_id}", "retention_in_days": 7 },
+          { "file_path": "/var/log/rw/rw-vision.log", "log_group_name": "/rw/worker/rw-vision", "log_stream_name": "{instance_id}", "retention_in_days": 7 },
+          { "file_path": "/var/log/rw/rw-mcp-tools.log", "log_group_name": "/rw/worker/rw-mcp-tools", "log_stream_name": "{instance_id}", "retention_in_days": 7 },
+          { "file_path": "/var/log/rw/rw-agent.log", "log_group_name": "/rw/worker/rw-agent", "log_stream_name": "{instance_id}", "retention_in_days": 7 },
+          { "file_path": "/var/log/rw/deploy.log", "log_group_name": "/rw/worker/deploy", "log_stream_name": "{instance_id}-deploy", "retention_in_days": 7 },
+          { "file_path": "/var/log/rw/user-data.log", "log_group_name": "/rw/worker/deploy", "log_stream_name": "{instance_id}-user-data", "retention_in_days": 7 }
+        ]
+      }
+    },
+    "metrics_collected": {
+      "emf": {}
+    }
+  }
+}
