@@ -15,5 +15,5 @@ module "ocean_poller" {
 }
 ```
 
-The zip is written to `<stack>/.build/` (gitignored). Outputs: `name`, `arn`, `invoke_arn`,
+`extra_files` adds shared stdlib-only files (for `rw-api`: `rw/contracts/enums.py`, `rw/agent/lifecycle_rules.py`). The zip is written to `<stack>/.build/` (gitignored). Outputs: `name`, `arn`, `invoke_arn`,
 `role_arn`, `role_name`.

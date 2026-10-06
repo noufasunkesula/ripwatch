@@ -1,0 +1,14 @@
+schemaVersion: "2.2"
+description: "RipWatch: install a release on the worker (sprint-1.md N-09, N-10)"
+parameters:
+  release:
+    type: String
+    description: "Git SHA under s3://rw-artifacts-<account>/releases/"
+    allowedPattern: "^[0-9a-f]{7,40}$"
+mainSteps:
+  - action: aws:runShellScript
+    name: deployRelease
+    inputs:
+      timeoutSeconds: "900"
+      runCommand:
+        - "/opt/rw/bin/rw_deploy.sh {{ release }}"

@@ -1,0 +1,21 @@
+# On-demand prices for the benchmark cost per camera-hour (sprint-1.md N-14), us-east-1, USD/hour.
+# Values are the ones in sprint-1.md; re-check them on the pricing pages before Sprint 2 and
+# update checked_on (Claude Code does this, rule in N-14).
+instances:
+  c7g.large:
+    price_per_h: 0.0725
+    source: https://aws.amazon.com/ec2/pricing/on-demand/
+    checked_on: null  # sprint-1.md value, not re-checked yet
+  c7i.large:
+    price_per_h: 0.08925
+    source: https://aws.amazon.com/ec2/pricing/on-demand/
+    checked_on: null  # sprint-1.md value, not re-checked yet
+cool_fee:
+  price_per_h: 0.01
+  source: AWS Marketplace listing for COOL (north star section 2); add the listing URL when re-checked
+  checked_on: null  # sprint-1.md value, not re-checked yet
+# Which instance each runtime is benchmarked on (north star section 17).
+runtime_instance:
+  cool: c7g.large
+  std-arm: c7g.large
+  std-x86: c7i.large

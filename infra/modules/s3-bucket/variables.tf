@@ -44,6 +44,12 @@ variable "extra_policy_json" {
   default     = null
 }
 
+variable "manage_policy" {
+  description = "Create the bucket policy here. false when another stack owns the whole policy (it must keep the TLS-only deny)."
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   description = "Tags merged with the module defaults."
   type        = map(string)
