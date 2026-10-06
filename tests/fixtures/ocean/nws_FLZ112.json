@@ -1,0 +1,110 @@
+{
+    "@context": [
+        "https://geojson.org/geojson-ld/geojson-context.jsonld",
+        {
+            "@version": "1.1",
+            "wx": "https://api.weather.gov/ontology#",
+            "@vocab": "https://api.weather.gov/ontology#"
+        }
+    ],
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.83575a9f79022b730c0570fe49ed509b0e16f677.001.1",
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+                "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.83575a9f79022b730c0570fe49ed509b0e16f677.001.1",
+                "@type": "wx:Alert",
+                "id": "urn:oid:2.49.0.1.840.0.83575a9f79022b730c0570fe49ed509b0e16f677.001.1",
+                "areaDesc": "South Walton; Coastal Bay; Coastal Gulf; Coastal Franklin",
+                "geocode": {
+                    "SAME": [
+                        "012131",
+                        "012005",
+                        "012045",
+                        "012037"
+                    ],
+                    "UGC": [
+                        "FLZ108",
+                        "FLZ112",
+                        "FLZ114",
+                        "FLZ115"
+                    ]
+                },
+                "affectedZones": [
+                    "https://api.weather.gov/zones/forecast/FLZ108",
+                    "https://api.weather.gov/zones/forecast/FLZ112",
+                    "https://api.weather.gov/zones/forecast/FLZ114",
+                    "https://api.weather.gov/zones/forecast/FLZ115"
+                ],
+                "references": [
+                    {
+                        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.a36f5b22221c7f6c7be60075a4256bc559aa80bb.001.1",
+                        "identifier": "urn:oid:2.49.0.1.840.0.a36f5b22221c7f6c7be60075a4256bc559aa80bb.001.1",
+                        "sender": "w-nws.webmaster@noaa.gov",
+                        "sent": "2026-10-05T13:32:00-04:00"
+                    }
+                ],
+                "sent": "2026-10-06T03:16:00-04:00",
+                "effective": "2026-10-06T03:16:00-04:00",
+                "onset": "2026-10-06T03:16:00-04:00",
+                "expires": "2026-10-07T04:00:00-04:00",
+                "ends": "2026-10-07T04:00:00-04:00",
+                "status": "Actual",
+                "messageType": "Update",
+                "category": "Met",
+                "severity": "Moderate",
+                "certainty": "Likely",
+                "urgency": "Expected",
+                "event": "Rip Current Statement",
+                "sender": "w-nws.webmaster@noaa.gov",
+                "senderName": "NWS Tallahassee FL",
+                "headline": "Rip Current Statement issued October 6 at 3:16AM EDT until October 7 at 4:00AM EDT by NWS Tallahassee FL",
+                "description": "* WHAT...Dangerous rip currents.\n\n* WHERE...Walton, Bay, Gulf, and Franklin County Beaches.\n\n* WHEN...Through late tonight.\n\n* IMPACTS...Rip currents can sweep even the best swimmers away\nfrom shore into deeper water.",
+                "instruction": "Swim near a lifeguard. If caught in a rip current, relax and\nfloat. Don't swim against the current. If able, swim in a\ndirection following the shoreline. If unable to escape, face the\nshore and call or wave for help.",
+                "response": "Avoid",
+                "note": null,
+                "parameters": {
+                    "AWIPSidentifier": [
+                        "CFWTAE"
+                    ],
+                    "WMOidentifier": [
+                        "WHUS42 KTAE 060716"
+                    ],
+                    "NWSheadline": [
+                        "HIGH RIP CURRENT RISK NOW IN EFFECT THROUGH LATE TONIGHT"
+                    ],
+                    "BLOCKCHANNEL": [
+                        "EAS",
+                        "NWEM",
+                        "CMAS"
+                    ],
+                    "VTEC": [
+                        "/O.EXT.KTAE.RP.S.0070.000000T0000Z-261007T0800Z/"
+                    ],
+                    "eventEndingTime": [
+                        "2026-10-07T04:00:00-04:00"
+                    ],
+                    "expiredReferences": [
+                        "w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.411ab6801964f67929a526287235a84926a0484d.001.1,2026-10-04T02:14:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.a9e0b8e67641e90b0c896bbe8cea479887af60b4.001.1,2026-10-03T14:27:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.6cdefb92e86c1a1a9bb1159661e435cc1b5ba372.001.1,2026-10-03T03:34:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.32ecb5bbf878cd0af5e9cedd5f2bfdb242adda06.002.1,2026-10-02T03:14:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.32ecb5bbf878cd0af5e9cedd5f2bfdb242adda06.001.1,2026-10-02T03:14:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.4f5550fad290770f23915db7ce974593ff5acef4.001.1,2026-10-01T03:30:00-04:00"
+                    ]
+                },
+                "scope": "Public",
+                "code": "IPAWSv1.0",
+                "language": "en-US",
+                "web": "http://www.weather.gov",
+                "eventCode": {
+                    "SAME": [
+                        "NWS"
+                    ],
+                    "NationalWeatherService": [
+                        "RPS"
+                    ]
+                }
+            }
+        }
+    ],
+    "title": "Current watches, warnings, and advisories for Coastal Bay (FLZ112) FL",
+    "updated": "2026-10-06T09:43:40+00:00"
+}
