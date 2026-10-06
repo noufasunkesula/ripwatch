@@ -9,4 +9,6 @@ lifeguard_email = "name+lifeguard@gmail.com" # RW_LIFEGUARD_EMAIL
 # nws_zone_id     = "<zone>"                       # RW_NWS_ZONE_ID
 # nws_user_agent  = "RipWatch/0.1 (team@example.com)"
 
+# api_version = "dev"     # RW_VERSION for GET /api/health; deploy.yml sets the git sha
+
 # judging_mode = false   # true keeps the worker awake overnight during judging

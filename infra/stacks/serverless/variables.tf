@@ -44,6 +44,12 @@ variable "nws_user_agent" {
   default     = "RipWatch/0.1"
 }
 
+variable "api_version" {
+  description = "Version GET /api/health reports (RW_VERSION); deploy.yml sets TF_VAR_api_version to the git sha."
+  type        = string
+  default     = "dev"
+}
+
 variable "judging_mode" {
   description = "true during judging: the nightly sleep schedule is disabled so the demo stays up."
   type        = bool

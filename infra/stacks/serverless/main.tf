@@ -64,6 +64,13 @@ data "aws_iam_policy_document" "api" {
     resources = [local.table_arn["approvals"], local.table_arn["incidents"], local.table_arn["jobs"], local.table_arn["cameras"]]
   }
 
+  # Approvals append human_approval and status_change steps to the incident trace (D-07).
+  statement {
+    sid       = "AppendTrace"
+    actions   = ["dynamodb:PutItem"]
+    resources = [local.table_arn["agent-trace"]]
+  }
+
   # Presigned URLs carry the Lambda's own permissions.
   statement {
     sid       = "PresignUploads"
@@ -101,6 +108,7 @@ module "api" {
     RW_ARTIFACTS_BUCKET    = local.art_bucket
     RW_TOPIC_LIFEGUARD_ARN = aws_sns_topic.lifeguard.arn
     RW_ALLOWED_ORIGIN      = var.dashboard_url
+    RW_VERSION             = var.api_version
   })
 }
 
