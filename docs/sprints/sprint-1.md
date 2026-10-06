@@ -935,26 +935,26 @@ Permissions: `contents: read` by default, `id-token: write` only on jobs that lo
 ## 9. Daksh's tasks
 
 ### D-01 Contracts
-- [ ] Implement 7.1 to 7.6 as Pydantic v2 models in `rw/contracts/` with `model_config = ConfigDict(extra="forbid")`, enums for every fixed value, validators for: polygon max 32 points, confidence in [0, 1], thresholds consistent with labels, size under 64 KB, `reason` required on reject.
-- [ ] `export_schemas.py` writes JSON Schemas to `docs/contracts/`.
-- [ ] `docs/contracts/README.md`: versioning rule, how to propose a change, owners.
-- [ ] Share the draft with Saif on Day 1. Record his sign-off (or requested changes) in the Decision Log with the date.
-- [ ] Tests: valid example round-trips for each model; invalid examples rejected (extra field, 33-point polygon, confidence 1.2, reject without reason).
+- [x] Implement 7.1 to 7.6 as Pydantic v2 models in `rw/contracts/` with `model_config = ConfigDict(extra="forbid")`, enums for every fixed value, validators for: polygon max 32 points, confidence in [0, 1], thresholds consistent with labels, size under 64 KB, `reason` required on reject.
+- [x] `export_schemas.py` writes JSON Schemas to `docs/contracts/`.
+- [x] `docs/contracts/README.md`: versioning rule, how to propose a change, owners.
+- [x] Share the draft with Saif on Day 1. Record his sign-off (or requested changes) in the Decision Log with the date.
+- [x] Tests: valid example round-trips for each model; invalid examples rejected (extra field, 33-point polygon, confidence 1.2, reject without reason).
 
 ### D-02 Trace and decision helpers
-- [ ] `rw/agent/trace.py`: `TraceWriter(trace_key, trace_id)` with `step(type, name, input, output_summary, reasoning_summary, latency_ms, error)` writing `TraceStep` rows with an incrementing `step`. `rekey(new_trace_key)` used when a candidate becomes an incident (copies existing steps to the incident key, so one incident has one complete trace).
-- [ ] Output summaries are truncated: max 2 KB per field, lists capped at 10 items. Full tool outputs are never stored in DynamoDB.
+- [x] `rw/agent/trace.py`: `TraceWriter(trace_key, trace_id)` with `step(type, name, input, output_summary, reasoning_summary, latency_ms, error)` writing `TraceStep` rows with an incrementing `step`. `rekey(new_trace_key)` used when a candidate becomes an incident (copies existing steps to the incident key, so one incident has one complete trace).
+- [x] Output summaries are truncated: max 2 KB per field, lists capped at 10 items. Full tool outputs are never stored in DynamoDB.
 
 ### D-03 MCP server and data tools (`rw/mcp_tools/`)
-- [ ] FastMCP server, streamable HTTP on `127.0.0.1:8765`, no auth (loopback only; document why). Heartbeat. Structured logging with `trace_id` passed as a tool argument on every tool.
-- [ ] Every tool has typed inputs and outputs (Pydantic), a docstring written for the model (what it does, when to use it, what it returns), and returns compact JSON.
+- [x] FastMCP server, streamable HTTP on `127.0.0.1:8765`, no auth (loopback only; document why). Heartbeat. Structured logging with `trace_id` passed as a tool argument on every tool.
+- [x] Every tool has typed inputs and outputs (Pydantic), a docstring written for the model (what it does, when to use it, what it returns), and returns compact JSON.
 
 | Tool | Inputs | Output | Behavior |
 |---|---|---|---|
 | `zoom_and_recheck` | `trace_id`, `result_id`, `camera_id`, `rip_id` or `bbox_px`, `zoom` (1.5 to 4.0, default 2.0) | `label`, `confidence`, `before_confidence`, `keyframes_used`, `note` | Loads up to 10 keyframes for the result from S3, crops the bbox expanded by 25%, upsamples by `zoom` with `INTER_CUBIC`, calls `VisionPipeline.recheck`. Fails gracefully with `note="no_keyframes"` |
 | `get_flow_stats` | `trace_id`, `camera_id`, `window_s` (30 to 300) | per-rip mean and max seaward flow, persistence in seconds, trend (`rising`, `steady`, `falling`), number of clips seen | Queries `rw-detections` for the camera over the window |
 | `track_swimmers` | `trace_id`, `result_id`, `camera_id` | swimmers with `track_id`, `in_rip_id`, distance, drift, count at risk | Reads the result |
-| `predict_spread` | `trace_id`, `result_id`, `camera_id`, `rip_id`, `horizons_s` (default `[60, 180, 300]`) | predicted polygons per horizon, swimmers predicted inside the rip per horizon, `method` | Baseline: translate and dilate the rip polygon along the mean seaward flow vector for each horizon, scaled by the ocean factor below; advect swimmer positions with their drift. Method string `"linear_advection_v1"`. Saif can replace later |
+| `predict_spread` | `trace_id`, `result_id`, `camera_id`, `rip_id`, `horizons_s` (default `[60, 180, 300]`) | predicted polygons per horizon, swimmers predicted inside the rip per horizon, `method` | Baseline: keep the rip anchored at its shore end, extend its seaward end by seaward flow speed x time (capped at 50% of the rip length by 300 s) and widen it 10% per minute, both scaled by the ocean factor below; advect swimmer positions with their drift. Method string `"seaward_stretch_v1"` (`"no_motion"` in image mode). Saif can replace later |
 | `get_ocean_conditions` | `trace_id` | next high/low tide times and heights, tide trend, active NWS alerts (event + headline), `ocean_factor` (1.0 normal, 1.2 within 2 h of low tide, +0.3 if a Rip Current Statement or Beach Hazards Statement is active), `age_minutes` | Reads SSM `/rw/ocean/latest`. If older than 120 min, returns the data with `stale=true` |
 
 ### D-04 MCP action tools
@@ -968,7 +968,7 @@ Permissions: `contents: read` by default, `id-token: write` only on jobs that lo
 | `request_followup_capture` | `trace_id`, `camera_id`, `job_id`, `message` | `requested: true` | Writes `followup_request` on the job (shown in the dashboard). Only allowed for `mode=image` or `burst` |
 | `close_incident` | `trace_id`, `incident_id`, `outcome` (`false_alarm`, `resolved`, `confirmed`), `reason` | final status | Sets `resolved`/`confirmed`/`closed`. `false_alarm` emits `FalseAlarmsRejected` |
 
-- [ ] Unit tests for every tool with moto (S3, DynamoDB, SNS, SSM) and fixture keyframes.
+- [x] Unit tests for every tool with moto (S3, DynamoDB, SNS, SSM) and fixture keyframes.
 
 ### D-05 Agent loop (`rw/agent/`)
 
@@ -1099,6 +1099,15 @@ Upgrade to Paid plan, apply bootstrap (if not done in Sprint 1), migrate bootstr
 | 2026-10-01 | Local AWS access via `aws configure --profile ripwatch` with per-person IAM users and access keys, instead of IAM Identity Center | Simpler for a 3-person, 4-week project; no Organization needed. Keys stay in `~/.aws/credentials`, Gitleaks guards the repo, MFA required for console | Noufa |
 | 2026-10-01 | `terraform plan` against real AWS is allowed anytime; apply and destroy only after a human says "apply" and confirms the plan | Catch real errors early without risking cost or changes | Noufa, Daksh |
 | 2026-10-01 | Lighter path (section 0.4) defined, decision point Sun Oct 4 | A known fallback if scope is too big | Noufa |
+| 2026-10-02 | Contracts: Approval lives in `rw/contracts/decision.py`, Job in `vision.py`, shared types in `base.py`; all 6 models export schemas (not only 3) | Keep the section 4 file list; D-01 asks for every model | Daksh |
+| 2026-10-02 | Job gets `schema_version` (default `1.0`) and extra consistency checks (counts match lists, `in_rip_id` exists, polygon inside frame, motion null in image mode, alert needs `incident_id`, `requested_action` only on alert) | Versioning rule says every message has a version; catch bad data at the boundary | Daksh |
+| 2026-10-02 | Thresholds 0.70 / 0.40 are defaults only; live SSM values passed as validation context | Saif's model needs tuned thresholds | Daksh |
+| 2026-10-02 | Saif reviewed the VisionResult draft: requested changes (box format pick one, original-image pixel coords + image size, temporal evidence N of M frames, `zoom_and_recheck` before/after status). Two drafts exist (his and Daksh's); merge at the sync, sign-off after | Recorded per D-01 | Saif, Daksh |
+| 2026-10-02 | `TraceWriter` writes through a `TraceSink` interface; in-memory sink now, DynamoDB sink after N-04 | Not blocked on `rw.common.aws` | Daksh |
+| 2026-10-03 | `predict_spread` uses `seaward_stretch_v1` instead of `linear_advection_v1`: shore end fixed, seaward end extends by flow speed x time (capped at 50% of rip length by 300 s), widens 10%/min, scaled by ocean factor | Translating the whole polygon at water speed pushed the example rip (6.4 px/s, 640x360) out of frame within 1 minute; water flows through a rip, the rip itself mostly stays | Daksh |
+| 2026-10-03 | `rw-detections` item = `camera_id`, `ts_result` (`<start_ts %Y-%m-%dT%H:%M:%S.%fZ>#<result_id>`), `result_id`, `expires_at`, `result` (VisionResult JSON string); written only through `rw.mcp_tools.store.to_item` | One shared format for ingest and tools; fixed-width timestamp keeps string order = time order; no float/Decimal conversion of nested fields | Daksh (Request to Noufa) |
+| 2026-10-03 | `get_flow_stats` trend adds `unknown` (fewer than 2 flow readings) to `rising`/`steady`/`falling` | A trend from one reading would be invented | Daksh |
+| 2026-10-03 | MCP server uses `mcp` 2.x `MCPServer` (FastMCP was renamed in mcp 2.0); pin `mcp>=2.3,<3` | Importing FastMCP fails on mcp 2.x; same server and transport | Daksh (Request to Noufa) |
 | 2026-10-05 | Noufa is unavailable; Daksh runs Noufa's tasks (N-01 onward) in sessions logged as `noufa`, committing with his own git identity | Keep the N and D task streams separate in `handoff.md` while one person works both | Daksh |
 | 2026-10-05 | `sprint-1.md` and the north star moved into `docs/` (`docs/sprints/sprint-1.md`, `docs/02-infra-north-star.md`) as N-01 and `cloud-claude.md` expect; `docs/01-project-description.md` is not in the repo yet, added when available | Paths in `cloud-claude.md` and section 4 already point there | Daksh (for Noufa) |
 | 2026-10-05 | Dev extra also has `pre-commit` (needed by `make setup`) and `tzdata` (zoneinfo on Windows for `scripts/now.py`); ruff skips `*.md` so formatting never rewrites code snippets in docs | Tools the existing tasks already require | Daksh (for Noufa) |
@@ -1110,6 +1119,7 @@ Upgrade to Paid plan, apply bootstrap (if not done in Sprint 1), migrate bootstr
 | 2026-10-05 | N-09 stacks read earlier stacks by fixed section 5 names (data sources or built ARNs), not `terraform_remote_state`; the edge stack owns the whole `rw-frontend` bucket policy (`s3-bucket` gained `manage_policy`); `lambda-fn` gained `extra_files` so `rw-api` packages the shared stdlib modules once Daksh writes them (skipped until they exist); EventBridge Scheduler uses one role `rw-schedules-role`; `deploy/user_data.sh`, `rw.env.tpl`, `cloudwatch-agent.json` and `ssm/rw-deploy.yaml` written early because the compute stack renders them (N-10 finishes the rest) | No cross-stack state coupling; one owner per bucket policy avoids two stacks fighting; compute cannot validate without its templates | Daksh (for Noufa) |
 | 2026-10-05 | N-10: `make release` bundles `rw_deploy.sh`, `constraints.txt`, `logrotate-rw` and the 5 units next to the wheel, and user data fetches `rw_deploy.sh` from the release (installs come from the release, never from a git checkout); `deploy/constraints.txt` pins every `opencv-*` wheel to `<0` so any requirement that pulls one fails to resolve; `deploy/user_data.sh` stays a Terraform template, so shellcheck runs on the rendered script in `tests/unit/test_deploy_files.py` and the raw file is excluded from `make lint` and pre-commit; rollback re-runs `rw_deploy.sh` once with the previous release (`RW_DEPLOY_ROLLBACK=1` stops loops) | A worker can be rebuilt from S3 alone; shellcheck cannot parse `$${...}` template escapes | Daksh (for Noufa) |
 | 2026-10-05 | N-11 vision interface: `VisionPipeline.process(frames, mode, state, context)` takes a `ResultContext` (job, trace, source, S3 URI, out-of-order, active incident) because a VisionResult needs them; `recheck(crops, result) -> float` follows the D-03 `Rechecker` protocol instead of the section 8 `recheck(crops, mode) -> RecheckResult`, so it plugs into `zoom_and_recheck` as is. Baseline confidence = logistic(-3 + 2.5 x magnitude + 1.5 x persistence + 1.0 x timex darkness); regions under the uncertain threshold are dropped (a Rip cannot be `clear`). With `RW_RUNTIME` unset (laptop) `runtime.variant` is `std-arm` or `std-x86` from the CPU. `metrics.timed()` gained `record=` for `timings_ms` | One interface for ingest, the MCP tool and Saif; the contract forbids `clear` rips and unknown runtimes | Daksh (for Noufa) |
+| 2026-10-05 | D-04: incident status changes go through `rw/agent/lifecycle_rules.py` (stdlib-only status and transition tables from the D-06 diagram, packaged by rw-api later); `alert` from `alerted` is allowed so `alert_lifeguard` and `request_approval` can both run. `create_incident` is idempotent per `result_id` by scanning `rw-incidents` (no result_id index; fine at demo scale). The snapshot renderer is injected (`ToolDeps.renderer`, default `rw.vision.draw.draw_overlay` once N-11 is on main, plain polygons until then) plus a RipWatch caption bar. Action-tool dependencies are optional in `ToolDeps`; a tool without its table answers with a readable error | D-04 needs the D-06 rules before D-06; avoids a stacked dependency on N-11 | Daksh |
 | | | | |
 
 ---
