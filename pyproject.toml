@@ -13,7 +13,7 @@ dependencies = [
     # mcp 2.x renamed FastMCP to MCPServer (Decision Log 2026-10-03).
     "mcp>=2.3,<3",
     "python-ulid>=3.0",
-    # rw.bench prices.yaml and FakeLLM scripts; must be on the worker, not only in dev.
+    # rw.bench prices.yaml, FakeLLM scripts and scripts/replay_cameras.yaml; needed on the worker too.
     "pyyaml>=6",
 ]
 
