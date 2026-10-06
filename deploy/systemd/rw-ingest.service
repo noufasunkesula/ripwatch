@@ -1,0 +1,24 @@
+[Unit]
+Description=RipWatch rw-ingest: Pulls rw-jobs, runs the vision pipeline, writes results and candidates
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rw
+Group=rw
+EnvironmentFile=/etc/rw/rw.env
+WorkingDirectory=/var/lib/rw/work
+# systemd does not expand variables in the executable path; the wrapper runs $RW_PYTHON -m rw.<module>.
+ExecStart=/opt/rw/bin/run ingest
+Restart=always
+RestartSec=5
+MemoryMax=512M
+StandardOutput=append:/var/log/rw/rw-ingest.log
+StandardError=inherit
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

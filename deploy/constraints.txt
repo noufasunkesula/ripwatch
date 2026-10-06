@@ -1,0 +1,8 @@
+# Worker pip constraints (sprint-1.md N-10). The worker uses COOL's cv2 (or the one user data
+# installs on std runtimes); no requirement may pull an OpenCV wheel. pip constraints cannot
+# forbid a package, so each one is pinned to an impossible version: anything that depends on it
+# fails to resolve. rw_deploy.sh also refuses to finish if pip lists opencv-* on cool.
+opencv-python<0
+opencv-python-headless<0
+opencv-contrib-python<0
+opencv-contrib-python-headless<0
