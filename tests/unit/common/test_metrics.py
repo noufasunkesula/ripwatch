@@ -119,3 +119,14 @@ def test_agent_sink_uses_the_service_log_group(env):
     env()
     configure("rw-ingest", "agent")
     assert metrics._agent_sink().log_group_name == "/rw/worker/rw-ingest"
+
+
+def test_timed_can_record_elapsed_ms(env):
+    env()
+    record = {"flow": 1.0}
+    with timed("flow", record=record):
+        pass
+    with timed("detect", record=record):
+        pass
+    assert record["flow"] >= 1.0 and record["detect"] >= 0.0
+    assert [r.dimensions["stage"] for r in recorded()] == ["flow", "detect"]

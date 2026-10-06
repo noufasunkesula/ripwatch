@@ -1,0 +1,24 @@
+[Unit]
+Description=RipWatch rw-vision: Vision support: active-incident refresh, model loading, heartbeat
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rw
+Group=rw
+EnvironmentFile=/etc/rw/rw.env
+WorkingDirectory=/var/lib/rw/work
+# systemd does not expand variables in the executable path; the wrapper runs $RW_PYTHON -m rw.<module>.
+ExecStart=/opt/rw/bin/run vision
+Restart=always
+RestartSec=5
+MemoryMax=2G
+StandardOutput=append:/var/log/rw/rw-vision.log
+StandardError=inherit
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

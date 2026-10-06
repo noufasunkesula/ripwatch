@@ -59,6 +59,8 @@ class Settings(BaseModel):
     )
     runtime: Literal["cool", "std-arm", "std-x86"] | None = Field(None, alias="RW_RUNTIME")
     heartbeat_dir: str = Field("/var/run/rw", alias="RW_HEARTBEAT_DIR")
+    # Ingest work dirs, camera-sim pointer (persistent, unlike the heartbeat dir).
+    state_dir: str = Field("/var/lib/rw", alias="RW_STATE_DIR")
     # Fake by default so nothing calls (and pays for) Bedrock unless asked to.
     llm: Literal["fake", "bedrock"] = Field("fake", alias="RW_LLM")
     bedrock_model_id: str = Field("amazon.nova-lite-v1:0", alias="RW_BEDROCK_MODEL_ID")

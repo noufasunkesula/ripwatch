@@ -1,0 +1,5 @@
+# Copy to terraform.tfvars (gitignored).
+# allowed_origin  = "https://<cloudfront-domain>"  # RW_ALLOWED_ORIGIN, after the edge stack (second apply)
+# noaa_station_id = "<CO-OPS station>"             # RW_NOAA_STATION_ID (Daksh)
+# nws_zone_id     = "<NWS forecast zone>"          # RW_NWS_ZONE_ID (Daksh)
+# bedrock_model_id = "amazon.nova-lite-v1:0"

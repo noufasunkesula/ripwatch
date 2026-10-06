@@ -1,0 +1,10 @@
+# /etc/logrotate.d/rw (sprint-1.md N-10). copytruncate: services keep their file handles.
+/var/log/rw/*.log {
+    daily
+    rotate 3
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}

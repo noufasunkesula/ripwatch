@@ -21,6 +21,8 @@ repos:
     rev: v0.11.0.1
     hooks:
       - id: shellcheck
+        # Terraform template; checked rendered in tests/unit/test_deploy_files.py.
+        exclude: ^deploy/user_data\.sh$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

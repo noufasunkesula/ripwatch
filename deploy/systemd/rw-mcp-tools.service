@@ -1,0 +1,24 @@
+[Unit]
+Description=RipWatch rw-mcp-tools: MCP tool server for the agent on 127.0.0.1:8765
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rw
+Group=rw
+EnvironmentFile=/etc/rw/rw.env
+WorkingDirectory=/var/lib/rw/work
+# systemd does not expand variables in the executable path; the wrapper runs $RW_PYTHON -m rw.<module>.
+ExecStart=/opt/rw/bin/run mcp_tools
+Restart=always
+RestartSec=5
+MemoryMax=512M
+StandardOutput=append:/var/log/rw/rw-mcp-tools.log
+StandardError=inherit
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

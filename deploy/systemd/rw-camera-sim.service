@@ -1,0 +1,24 @@
+[Unit]
+Description=RipWatch rw-camera-sim: Replays clips into rw-data/incoming like a live camera
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rw
+Group=rw
+EnvironmentFile=/etc/rw/rw.env
+WorkingDirectory=/var/lib/rw/work
+# systemd does not expand variables in the executable path; the wrapper runs $RW_PYTHON -m rw.<module>.
+ExecStart=/opt/rw/bin/run camera_sim
+Restart=always
+RestartSec=5
+MemoryMax=128M
+StandardOutput=append:/var/log/rw/rw-camera-sim.log
+StandardError=inherit
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

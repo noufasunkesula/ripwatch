@@ -1,0 +1,2 @@
+# Copy to terraform.tfvars (gitignored). From RW_IAM_USERS in .env.
+iam_users = ["rw-daksh", "rw-saif"]

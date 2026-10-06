@@ -9,6 +9,9 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STACKS=(bootstrap iam network data compute serverless edge observability)
 PLAN_MAX_AGE_MIN=30
 PY="${UV:-uv} run python"
+# Download each provider once for all stacks and modules.
+export TF_PLUGIN_CACHE_DIR="${TF_PLUGIN_CACHE_DIR:-${HOME}/.terraform.d/plugin-cache}"
+mkdir -p "${TF_PLUGIN_CACHE_DIR}"
 
 die() { echo "tf.sh: $*" >&2; exit 1; }
 say() { echo "tf.sh: $*"; }
