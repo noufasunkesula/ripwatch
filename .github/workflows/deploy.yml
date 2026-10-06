@@ -45,6 +45,7 @@ jobs:
       TF_VAR_cool_ami_id: ${{ vars.RW_COOL_AMI_ID }}
       TF_VAR_dashboard_url: ${{ vars.RW_ALLOWED_ORIGIN }}
       TF_VAR_allowed_origin: ${{ vars.RW_ALLOWED_ORIGIN }}
+      TF_VAR_api_version: ${{ github.sha }}  # RW_VERSION for GET /api/health
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
