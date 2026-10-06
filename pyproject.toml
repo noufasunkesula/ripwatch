@@ -53,3 +53,4 @@ select = ["E", "F", "I", "B", "UP", "S"]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-ra"
+markers = ["network: calls real external APIs; runs only with RW_RUN_NETWORK=1"]
