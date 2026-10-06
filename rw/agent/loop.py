@@ -2,12 +2,14 @@
 
     candidate_received -> [suppressed_duplicate] | llm_call / tool_call ... -> [status_change]
                        -> [fallback] -> decision
+    candidate_received (follow-up) -> [status_change] -> decision        (rules, no model call)
 
 The model works through MCP tools and ends by calling submit_decision. Hard limits: 6 MCP tool
 calls, 8 model turns, 20 s per model call, 60 s in total. Any model error, limit hit or invalid
 decision switches to the rule-based fallback, so the system never goes silent. After the model
 decides, the loop checks the decision against what the tools actually did and makes up any
-missing step itself (recorded as a status_change step).
+missing step itself (recorded as a status_change step). Follow-ups for an active incident go
+through `lifecycle.followup` first; it settles most of them without the model (D-06).
 """
 
 from __future__ import annotations
@@ -20,7 +22,7 @@ from typing import Any
 
 import anyio
 
-from rw.agent import fallback
+from rw.agent import fallback, lifecycle
 from rw.agent.cooldown import Cooldown
 from rw.agent.llm import LLMClient, LLMError
 from rw.agent.prompts import SYSTEM_PROMPT, summary_json, user_message
@@ -30,6 +32,7 @@ from rw.agent.trace import TraceSink, TraceWriter
 from rw.common.ids import new_id
 from rw.common.metrics import emit
 from rw.contracts import AgentDecision, CandidateMessage, VisionResult
+from rw.contracts.candidate import CandidateReason
 from rw.contracts.decision import Action, DecisionKind, RiskLevel
 from rw.contracts.trace import StepType
 from rw.mcp_tools.store import DetectionStore
@@ -73,6 +76,7 @@ class _Run:
     writer: TraceWriter
     ids: dict[str, str]
     incident_id: str | None
+    status: str | None = None  # incident status as last seen, for status_change steps
     tool_calls: int = 0
     model_tool_calls: int = 0
     called: list[str] = field(default_factory=list)
@@ -120,6 +124,16 @@ class Agent:
             "result_id": result.result_id,
         }
         run = _Run(writer, ids, incident["incident_id"] if incident else None)
+        run.status = incident["status"] if incident else None
+
+        if incident is not None and candidate.reason == CandidateReason.ACTIVE_INCIDENT_FOLLOWUP:
+            outcome = lifecycle.followup(d.incidents, incident, result, now, writer)
+            if outcome.handled:
+                kind = DecisionKind.RESOLVE if outcome.event == "resolve" else DecisionKind.WATCH
+                return self._finish(
+                    candidate, result, run, polygon, now, started,
+                    kind, risk.level, outcome.reasons, None, used_fallback=False, model=False,
+                )  # fmt: skip
 
         used_fallback = False
         try:
@@ -144,6 +158,29 @@ class Agent:
             )  # fmt: skip
             run.incident_id = outcome.incident_id
 
+        return self._finish(
+            candidate, result, run, polygon, now, started,
+            kind, level, reasons, action, used_fallback=used_fallback, model=True,
+        )  # fmt: skip
+
+    def _finish(
+        self,
+        candidate: CandidateMessage,
+        result: VisionResult,
+        run: _Run,
+        polygon: list[tuple] | None,
+        now: datetime,
+        started: float,
+        kind: DecisionKind,
+        level: RiskLevel,
+        reasons: list[str],
+        action: Action | None,
+        *,
+        used_fallback: bool,
+        model: bool,
+    ) -> AgentDecision:
+        """Rekey the trace, write the decision step and row, emit the metrics."""
+        d, writer = self.deps, run.writer
         if kind != DecisionKind.ALERT:
             action = None
         if kind == DecisionKind.ALERT and run.incident_id is None:
@@ -166,7 +203,7 @@ class Agent:
             requested_action=action,
             tool_calls=run.tool_calls,
             used_fallback=used_fallback,
-            model_id=d.llm.model_id,
+            model_id=d.llm.model_id if model else None,
             input_tokens=run.input_tokens,
             output_tokens=run.output_tokens,
             latency_ms=round((time.perf_counter() - started) * 1000),
@@ -210,6 +247,16 @@ class Agent:
                 latency_ms=(time.perf_counter() - started) * 1000,
                 error=None if outcome.ok else outcome.text or "tool error",
             )
+            status = outcome.data.get("status") if outcome.ok else None
+            if status and name != "create_incident" and run.status and status != run.status:
+                run.writer.step(
+                    StepType.STATUS_CHANGE,
+                    "lifecycle",
+                    input={"incident_id": arguments.get("incident_id"), "via": name},
+                    output_summary={"from": run.status, "to": status},
+                )
+            if status:
+                run.status = status
             return outcome
 
         return call

@@ -24,6 +24,7 @@ from rw.agent.tools import McpTools
 from rw.agent.trace import InMemoryTraceSink
 from rw.common import metrics
 from rw.common.config import get_settings
+from rw.common.ids import new_id
 from rw.contracts import CandidateMessage, VisionResult
 from rw.mcp_tools.server import ToolDeps, build_server
 from rw.mcp_tools.store import InMemoryDetectionStore
@@ -62,7 +63,7 @@ def _result(vision_result: dict, kind: str) -> VisionResult:
     return VisionResult.model_validate(payload)
 
 
-def _candidate(result: VisionResult, active_incident_id=None) -> CandidateMessage:
+def _candidate(result: VisionResult, active_incident_id=None, reason=None) -> CandidateMessage:
     status = result.summary.status.value
     return CandidateMessage(
         result_id=result.result_id,
@@ -73,7 +74,7 @@ def _candidate(result: VisionResult, active_incident_id=None) -> CandidateMessag
         max_confidence=result.summary.max_confidence,
         swimmers_at_risk=result.summary.swimmers_at_risk,
         active_incident_id=active_incident_id,
-        reason=f"status_{status}",
+        reason=reason or f"status_{status}",
         created_at=T0 + timedelta(seconds=12),
     )
 
@@ -180,11 +181,14 @@ async def test_a_confident_rip_with_swimmer_is_zoomed_then_alerted(vision_result
         ("tool_call", "create_incident"),
         ("llm_call", "fake-llm"),
         ("tool_call", "alert_lifeguard"),
+        ("status_change", "lifecycle"),
         ("tool_call", "request_approval"),
         ("llm_call", "fake-llm"),
         ("decision", "decision"),
     ]
     zoom = sink.query(decision.incident_id)[2].output_summary
+    change = sink.query(decision.incident_id)[7]
+    assert change.output_summary == {"from": "watching", "to": "alerted"}
     assert zoom["confidence"] == 0.91 and zoom["before_confidence"] == 0.82
     assert incident["status"] == "alerted" and incident["pending_action"] == "raise_red_flag"
     assert incident["last_decision"]["decision_id"] == decision.decision_id
@@ -265,6 +269,7 @@ async def test_d_bedrock_error_falls_back_to_the_rules(vision_result):
         ("fallback", "fallback"),
         ("tool_call", "create_incident"),
         ("tool_call", "alert_lifeguard"),
+        ("status_change", "lifecycle"),
         ("tool_call", "request_approval"),
         ("decision", "decision"),
     ]
@@ -327,11 +332,97 @@ async def test_alert_without_approval_is_completed_by_the_loop(vision_result, tm
 
     assert decision.decision.value == "alert" and not decision.used_fallback
     steps = _steps(sink, decision.incident_id)
-    assert steps[-5:] == [
+    assert steps[-6:] == [
         ("tool_call", "create_incident"),
         ("tool_call", "request_approval"),
+        ("status_change", "lifecycle"),
         ("tool_call", "alert_lifeguard"),
         ("status_change", "reconcile"),
         ("decision", "decision"),
     ]
     assert incident["pending_action"] == "pa_announcement"
+
+
+# ---------------------------------------------------------------- follow-ups (D-06)
+
+INCIDENT = "inc_01J9ZC4M6Y2N8Q4T7V1B3K5D9F"
+
+
+def _followup(vision_result: dict, kind: str) -> VisionResult:
+    payload = copy.deepcopy(vision_result)
+    payload["result_id"] = new_id("res")
+    if kind == "clear":
+        payload["rips"], payload["swimmers"] = [], []
+        payload["summary"].update(
+            status="clear", max_confidence=0.0, rip_count=0, swimmer_count=0, swimmers_at_risk=0
+        )
+    return VisionResult.model_validate(payload)
+
+
+def _followup_candidate(result: VisionResult) -> CandidateMessage:
+    return _candidate(result, INCIDENT, "active_incident_followup")
+
+
+def _open(tables, result: VisionResult, status: str, **fields) -> None:
+    tables["rw-incidents"].put_item(
+        Item={"incident_id": INCIDENT, "camera_id": result.camera_id, "status": status,
+              "result_id": result.result_id, "trace_id": result.trace_id, **fields}
+    )  # fmt: skip
+
+
+async def test_watching_followup_resolves_by_rule_without_a_model_call(vision_result):
+    first = _result(vision_result, "rip")
+    async with _world(first, "bedrock_error") as (agent, sink, tables, llm):
+        _open(tables, first, "watching", watch_until_clips=1, followup_clear_streak=2)
+        clear = _followup(vision_result, "clear")
+        agent.deps.store.put(clear)
+        decision = await agent.handle(_followup_candidate(clear))
+        row = tables["rw-incidents"].get_item(Key={"incident_id": INCIDENT})["Item"]
+
+    assert llm.calls == 0
+    assert decision.decision.value == "resolve" and decision.incident_id == INCIDENT
+    assert decision.model_id is None and decision.tool_calls == 0 and not decision.used_fallback
+    assert _steps(sink, INCIDENT) == [
+        ("candidate_received", "candidate"),
+        ("status_change", "lifecycle"),
+        ("decision", "decision"),
+    ]
+    assert row["status"] == "resolved" and row["last_decision"]["decision"] == "resolve"
+
+
+async def test_approved_incident_is_confirmed_by_two_followups(vision_result):
+    first = _result(vision_result, "rip")
+    async with _world(first, "bedrock_error") as (agent, sink, tables, llm):
+        _open(tables, first, "approved", pending_action="raise_red_flag")
+        decisions = []
+        for _ in range(2):
+            again = _followup(vision_result, "rip")
+            agent.deps.store.put(again)
+            decisions.append(await agent.handle(_followup_candidate(again)))
+        row = tables["rw-incidents"].get_item(Key={"incident_id": INCIDENT})["Item"]
+
+    assert llm.calls == 0 and [d.decision.value for d in decisions] == ["watch", "watch"]
+    assert row["status"] == "confirmed"
+    assert _steps(sink, INCIDENT) == [
+        ("candidate_received", "candidate"),
+        ("decision", "decision"),
+        ("candidate_received", "candidate"),
+        ("status_change", "lifecycle"),
+        ("decision", "decision"),
+    ]
+    assert sink.query(INCIDENT)[3].output_summary == {"from": "approved", "to": "confirmed"}
+
+
+async def test_watching_followup_with_clips_left_goes_to_the_model(vision_result):
+    first = _result(vision_result, "rip")
+    async with _world(first, "bedrock_error") as (agent, sink, tables, llm):
+        _open(tables, first, "watching", watch_until_clips=3)
+        again = _followup(vision_result, "rip")
+        agent.deps.store.put(again)
+        decision = await agent.handle(_followup_candidate(again))
+        row = tables["rw-incidents"].get_item(Key={"incident_id": INCIDENT})["Item"]
+
+    assert llm.calls == 1 and decision.used_fallback  # the model ran (and failed here)
+    assert decision.incident_id == INCIDENT and row["status"] == "alerted"
+    assert row["watch_until_clips"] == 2
+    assert ("status_change", "lifecycle") in _steps(sink, INCIDENT)

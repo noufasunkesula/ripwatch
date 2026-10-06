@@ -203,3 +203,12 @@ def test_tool_specs_are_bedrock_shaped():
         "risk_level",
         "reasons",
     ]
+
+
+def test_user_message_accepts_dynamodb_numbers():
+    from decimal import Decimal
+
+    from rw.agent.prompts import user_message
+
+    text = user_message({"watch_until_clips": Decimal("3"), "c": Decimal("0.5")})
+    assert text.endswith('{"watch_until_clips":3,"c":0.5}')

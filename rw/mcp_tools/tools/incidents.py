@@ -3,7 +3,7 @@
 These are the only tools that change anything. None of them takes a public action: the agent can
 alert the head lifeguard and ask for approval, but raising a flag, a PA announcement or a dispatch
 only happens after a human approves in the dashboard (rw-api). Every status change goes through
-`lifecycle_rules.next_status`, so a tool can never make a move the D-06 diagram forbids.
+`rw.agent.lifecycle.transition`, so a tool can never make a move the D-06 diagram forbids.
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ import numpy as np
 from boto3.dynamodb.conditions import Attr
 from pydantic import BaseModel, Field
 
+from rw.agent import lifecycle
 from rw.agent import lifecycle_rules as rules
 from rw.common.ids import new_id
 from rw.common.metrics import emit
@@ -47,23 +48,8 @@ def _get(table: Any, incident_id: str) -> dict:
 
 
 def _move(table: Any, incident: dict, event: str, now: datetime, **fields: Any) -> str:
-    """Apply a lifecycle event plus extra fields; the condition guards against a racing writer."""
-    status = rules.next_status(incident["status"], event)
-    names = {"#status": "status", "#updated": "updated_at"}
-    values = {":status": status, ":updated": _iso(now), ":expected": incident["status"]}
-    sets = ["#status = :status", "#updated = :updated"]
-    for i, (key, value) in enumerate(fields.items()):
-        names[f"#f{i}"] = key
-        values[f":f{i}"] = value
-        sets.append(f"#f{i} = :f{i}")
-    table.update_item(
-        Key={"incident_id": incident["incident_id"]},
-        UpdateExpression="SET " + ", ".join(sets),
-        ConditionExpression="#status = :expected",
-        ExpressionAttributeNames=names,
-        ExpressionAttributeValues=values,
-    )
-    return status
+    """Apply a lifecycle event plus extra fields; the agent records the status_change step."""
+    return lifecycle.transition(table, incident, event, now, **fields)
 
 
 # ---------------------------------------------------------------- snapshot

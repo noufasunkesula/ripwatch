@@ -7,6 +7,7 @@ rips, swimmers at risk, quality, active incident and the deterministic pre-risk.
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from typing import Any
 
 from rw.agent.risk import Risk
@@ -87,6 +88,7 @@ def summary_json(
             "incident_id": incident["incident_id"],
             "status": incident["status"],
             "watch_until_clips": incident.get("watch_until_clips"),
+            "clear_followups_in_a_row": incident.get("followup_clear_streak", 0),
             "pending_action": incident.get("pending_action"),
         },
         "rip_statement_active": rip_statement_active,
@@ -95,4 +97,11 @@ def summary_json(
 
 
 def user_message(summary: dict[str, Any]) -> str:
-    return "Candidate to assess:\n" + json.dumps(summary, separators=(",", ":"))
+    return "Candidate to assess:\n" + json.dumps(summary, separators=(",", ":"), default=_number)
+
+
+def _number(value: Any) -> Any:
+    """Incident rows come from DynamoDB, which returns numbers as Decimal."""
+    if isinstance(value, Decimal):
+        return int(value) if value == value.to_integral_value() else float(value)
+    raise TypeError(f"{type(value).__name__} is not JSON serializable")
