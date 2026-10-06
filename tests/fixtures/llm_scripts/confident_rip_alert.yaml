@@ -1,0 +1,21 @@
+# (a) Confident rip with a swimmer: zoom, open an incident, alert, ask approval, decide alert.
+turns:
+  - text: "Confidence 0.82 is under 0.85; zooming first."
+    tool_use:
+      - name: zoom_and_recheck
+        input: {trace_id: "{trace_id}", result_id: "{result_id}", camera_id: "{camera_id}", rip_id: "{top_rip_id}"}
+  - tool_use:
+      - name: create_incident
+        input: {trace_id: "{trace_id}", camera_id: "{camera_id}", result_id: "{result_id}",
+                risk_level: CRITICAL, summary: "Rip confirmed on zoom, swimmer inside"}
+  - tool_use:
+      - name: alert_lifeguard
+        input: {trace_id: "{trace_id}", incident_id: "{incident_id}",
+                message: "Rip current at cam-01 with a swimmer inside it. Confirmed on zoom."}
+      - name: request_approval
+        input: {trace_id: "{trace_id}", incident_id: "{incident_id}", action: raise_red_flag,
+                message: "Raise the red flag at cam-01?"}
+  - tool_use:
+      - name: submit_decision
+        input: {decision: alert, risk_level: CRITICAL, requested_action: raise_red_flag,
+                reasons: ["rip confirmed after zoom", "swimmer inside the rip"]}

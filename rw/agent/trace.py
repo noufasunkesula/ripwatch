@@ -5,9 +5,8 @@ Every agent action becomes one TraceStep row under a trace_key:
   - inc_<...> once it has one; rekey() moves the earlier steps over so one
     incident has one complete trace.
 
-Storage goes through a TraceSink. InMemoryTraceSink is used by tests and the
-local loop; the DynamoDB sink for rw-agent-trace plugs in once rw.common.aws
-(N-04) is available.
+Storage goes through a TraceSink: InMemoryTraceSink for tests, DynamoTraceSink for
+rw-agent-trace (the full step is kept as JSON in `row`, top-level fields stay queryable).
 """
 
 from __future__ import annotations
@@ -15,6 +14,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any, Protocol
 
 from pydantic import BaseModel
@@ -44,6 +44,29 @@ class InMemoryTraceSink:
     def query(self, trace_key: str) -> list[TraceStep]:
         steps = self.rows.get(trace_key, {})
         return [steps[n] for n in sorted(steps)]
+
+
+class DynamoTraceSink:
+    """rw-agent-trace rows: trace_key (hash) + step (range); the step stored as JSON."""
+
+    def __init__(self, table: Any) -> None:
+        self.table = table
+
+    def put(self, step: TraceStep) -> None:
+        item = json.loads(step.model_dump_json(), parse_float=Decimal)  # DynamoDB has no float
+        self.table.put_item(Item={**item, "trace_key": step.trace_key, "step": step.step,
+                                  "row": step.model_dump_json()})  # fmt: skip
+
+    def query(self, trace_key: str) -> list[TraceStep]:
+        from boto3.dynamodb.conditions import Key
+
+        rows, kwargs = [], {"KeyConditionExpression": Key("trace_key").eq(trace_key)}
+        while True:
+            page = self.table.query(**kwargs)
+            rows += [TraceStep.model_validate_json(i["row"]) for i in page.get("Items", [])]
+            if "LastEvaluatedKey" not in page:
+                return sorted(rows, key=lambda r: r.step)
+            kwargs["ExclusiveStartKey"] = page["LastEvaluatedKey"]
 
 
 def _json_default(value: Any) -> Any:

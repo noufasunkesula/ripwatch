@@ -1,0 +1,8 @@
+# (b) Uncertain rip: zoom, confidence drops, close as false alarm.
+turns:
+  - tool_use:
+      - name: zoom_and_recheck
+        input: {trace_id: "{trace_id}", result_id: "{result_id}", camera_id: "{camera_id}", rip_id: "{top_rip_id}"}
+  - tool_use:
+      - name: submit_decision
+        input: {decision: close_false_alarm, risk_level: LOW, reasons: ["zoom shows no rip"]}
