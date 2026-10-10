@@ -1,0 +1,109 @@
+# Deploy on merge to main (sprint-1.md N-15, north star 16). Does nothing until Sprint 2:
+# the gate job exits successfully with a notice unless repository variable RW_DEPLOY_ENABLED is "true".
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        run: |
+          if [ "${{ vars.RW_DEPLOY_ENABLED }}" != "true" ]; then
+            echo "::notice::Deploy disabled: set repository variable RW_DEPLOY_ENABLED=true in Sprint 2."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs: gate
+    if: needs.gate.outputs.enabled == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: us-east-1
+      AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+      TF_VAR_team_emails: ${{ vars.RW_TEAM_EMAILS_JSON }}
+      TF_VAR_lifeguard_email: ${{ vars.RW_LIFEGUARD_EMAIL }}
+      TF_VAR_cool_ami_id: ${{ vars.RW_COOL_AMI_ID }}
+      TF_VAR_dashboard_url: ${{ vars.RW_ALLOWED_ORIGIN }}
+      TF_VAR_allowed_origin: ${{ vars.RW_ALLOWED_ORIGIN }}
+      TF_VAR_api_version: ${{ github.sha }}  # RW_VERSION for GET /api/health
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/rw-gha
+          aws-region: us-east-1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "1.16.5"
+          terraform_wrapper: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+
+      - name: terraform apply changed stacks, in order
+        run: |
+          make backend-config
+          changed=$(git diff --name-only HEAD~1 HEAD -- infra)
+          for stack in iam network data compute serverless edge observability; do
+            if echo "$changed" | grep -qE "^infra/(modules/|stacks/${stack}/)"; then
+              echo "::group::apply ${stack}"
+              make plan STACK="${stack}"
+              RW_CONFIRM_APPLY="${stack}" make apply STACK="${stack}"
+              echo "::endgroup::"
+            else
+              echo "skip ${stack}: unchanged"
+            fi
+          done
+
+      - name: release to S3 and /rw/release
+        id: release
+        run: |
+          make release
+          sha=$(git rev-parse --short HEAD)
+          aws s3 cp --recursive "dist/${sha}" "s3://rw-artifacts-${AWS_ACCOUNT_ID}/releases/${sha}/"
+          aws ssm put-parameter --name /rw/release --type String --overwrite --value "${sha}"
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+
+      - name: deploy to the worker if it is running
+        run: |
+          running=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names rw-worker-asg \
+            --query 'length(AutoScalingGroups[0].Instances)' --output text)
+          if [ "${running}" = "0" ] || [ "${running}" = "None" ]; then
+            echo "::notice::Worker asleep: it installs /rw/release on next wake."
+            exit 0
+          fi
+          aws ssm send-command --document-name rw-deploy --targets Key=tag:rw:role,Values=worker \
+            --parameters "release=${{ steps.release.outputs.sha }}" --comment "deploy.yml ${{ steps.release.outputs.sha }}"
+
+      - name: frontend (placeholder until Sprint 3) and cache invalidation
+        run: |
+          mkdir -p frontend/dist
+          if [ ! -f frontend/dist/index.html ]; then
+            echo '<!doctype html><title>RipWatch</title><p>RipWatch dashboard coming in Sprint 3</p>' > frontend/dist/index.html
+          fi
+          aws s3 sync frontend/dist "s3://rw-frontend-${AWS_ACCOUNT_ID}/" --delete
+          make init STACK=edge
+          dist=$(terraform -chdir=infra/stacks/edge output -raw distribution_id)
+          aws cloudfront create-invalidation --distribution-id "${dist}" --paths '/*'

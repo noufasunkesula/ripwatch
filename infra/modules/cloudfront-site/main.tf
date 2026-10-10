@@ -22,6 +22,7 @@ resource "aws_cloudfront_origin_access_control" "this" {
   signing_protocol                  = "sigv4"
 }
 
+# nosemgrep: aws-insecure-cloudfront-distribution-tls-version -- default certificate (no custom domain, north star 22) cannot pin a TLS minimum
 resource "aws_cloudfront_distribution" "this" {
   #checkov:skip=CKV_AWS_68:No WAF by design (north star 1); API Gateway throttles and Cognito auth protect the API
   #checkov:skip=CKV2_AWS_47:No WAF by design (north star 1)

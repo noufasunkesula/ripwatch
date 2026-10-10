@@ -3,6 +3,7 @@ locals {
   instance_tags = merge(local.tags, { Name = "rw-worker", "rw:role" = "worker" })
 }
 
+# nosemgrep: aws-ec2-has-public-ip -- public IP replaces a NAT gateway (north star 6); rw-worker-sg has no ingress
 resource "aws_launch_template" "this" {
   #checkov:skip=CKV_AWS_88:Public IP replaces a NAT gateway (north star 6); rw-worker-sg has no ingress
   name                   = "rw-worker-lt"

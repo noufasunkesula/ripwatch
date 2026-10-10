@@ -1,0 +1,101 @@
+# RipWatch CI (sprint-1.md N-15, north star 16). Every action pinned to a commit SHA.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_FROZEN: "1"
+  TERRAFORM_VERSION: "1.16.5"
+
+jobs:
+  python:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --extra dev --extra cv-std
+      - name: ruff
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: unit tests
+        run: uv run pytest tests/unit -q
+      - name: integration tests (moto server)
+        run: make test-int
+      - name: contract schema drift
+        run: uv run python -m rw.contracts.export_schemas --check
+
+  security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+      - name: semgrep
+        run: uvx semgrep scan --error --config p/python --config p/terraform --config p/secrets
+      - name: pip-audit (runtime dependencies)
+        run: |
+          uv export --no-dev --no-hashes --no-emit-project --extra cv-std --format requirements-txt -o requirements-audit.txt
+          uvx pip-audit --strict -r requirements-audit.txt
+
+  terraform:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+      - uses: terraform-linters/setup-tflint@6ffdbaa3be476b3431f7275c26966ef32ff60337 # v6.3.2
+      - name: terraform fmt
+        run: terraform fmt -check -recursive infra
+      - name: terraform validate (offline)
+        run: bash scripts/tf.sh validate
+      - name: tflint
+        run: |
+          tflint --init --config "$PWD/.tflint.hcl"
+          for d in infra/bootstrap infra/stacks/* infra/modules/*; do
+            compgen -G "$d/*.tf" > /dev/null || continue
+            echo "tflint $d"
+            tflint --chdir "$d" --config "$PWD/.tflint.hcl"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: checkov
+        run: uvx checkov --config-file .checkov.yaml
+
+  shell:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: shellcheck
+        # deploy/user_data.sh is a Terraform template; tests/unit/test_deploy_files.py lints it rendered.
+        run: |
+          files=$(find deploy scripts -name '*.sh' ! -path deploy/user_data.sh)
+          if [ -n "$files" ]; then shellcheck $files; else echo "no shell scripts"; fi
